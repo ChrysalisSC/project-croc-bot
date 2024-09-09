@@ -9,7 +9,7 @@ import random
 import requests
 
 
-class funcommands(commands.Cog):
+class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -217,13 +217,13 @@ class funcommands(commands.Cog):
         description="Generates a random compliment"
     )
     async def generate_compliment(self, interaction: discord.Integration, member: discord.Member = None):
-        with open ("data/compliments.json", "r") as file:
+        with open("config/responses/compliments.json", "r", encoding='utf-8') as file:
             COMPLEMENTS = json.load(file)
-        compliment = random.choice(COMPLEMENTS)
+        compliment = random.choice(COMPLEMENTS['COMPLEMENTS'])
         if member is None:
              await interaction.response.send_message(f"💖 {compliment}")
         else:
              await interaction.response.send_message(f"💖 {member.mention}, {compliment}")
 
 async def setup(bot):
-    await bot.add_cog(funcommands(bot))
+    await bot.add_cog(FunCommands(bot))

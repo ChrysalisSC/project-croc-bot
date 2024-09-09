@@ -27,7 +27,10 @@ import time
 
 
 import utils.helpers as helpers
-from data.configure_database import database_setup
+
+
+from cogs.fun_commands import FunCommands
+from cogs.fun_commands import setup as setup_fun_commands
 
 import discord
 from discord.ext import commands, tasks
@@ -124,7 +127,7 @@ async def on_member_join(member):
 @bot.event
 async def on_ready():
     helpers.log("main", f"Logged in as {bot.user.name}")
-    helpers.log("CENTRAL COMMAND", f"Running in {bot.env} environment")
+    await setup_fun_commands(bot)
 
  
 
