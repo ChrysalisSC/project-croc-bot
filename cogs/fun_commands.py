@@ -217,7 +217,7 @@ class FunCommands(commands.Cog):
         description="Generates a random compliment"
     )
     async def generate_compliment(self, interaction: discord.Integration, member: discord.Member = None):
-        with open("config/responses/compliments.json", "r", encoding='utf-8') as file:
+        with open("responses/compliments.json", "r", encoding='utf-8') as file:
             COMPLEMENTS = json.load(file)
         compliment = random.choice(COMPLEMENTS['COMPLEMENTS'])
         if member is None:
