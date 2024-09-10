@@ -23,8 +23,9 @@ Your config folder is missing. Lets add that to your local repo
 # How to make a discord bot
 - head to https://discord.com/developers/applications.
 - create a new application
-- in oauth2 click on bot and administrator and copy paste the link at the bottom to add it to your dev server.
-
+- in oauth2 click on **bot** and then **administrator** and copy paste the link at the bottom to add it to your dev server.
+- Right click the discord server picture and select at the bottom copy server id. If you do not see this option you need to enable developer mode in your discord settings. 
 
 # run the bot by doing:
 ```python main.py dev```
+- then type !sync in anywhere in your server to sync the slash/ commands
