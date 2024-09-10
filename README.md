@@ -1,5 +1,7 @@
 # Welcome To Project Croc Bot
 
+To be added as a collaborator, ping Chrysalis on discord.
+
 # How to Setup
 - Clone this repository
 - Install Requirements, You should create a .venv if your cool
@@ -20,7 +22,7 @@ Your config folder is missing. Lets add that to your local repo
 }
 ```
 
-# How to make a discord bot
+# How to make a discord bot on local server
 - head to https://discord.com/developers/applications.
 - create a new application
 - in oauth2 click on **bot** and then **administrator** and copy paste the link at the bottom to add it to your dev server.
@@ -29,3 +31,6 @@ Your config folder is missing. Lets add that to your local repo
 # run the bot by doing:
 ```python main.py dev```
 - then type !sync in anywhere in your server to sync the slash/ commands
+
+# How do I code?
+- Read the /docs! 
