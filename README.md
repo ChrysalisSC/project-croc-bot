@@ -10,7 +10,7 @@ Your config folder is missing. Lets add that to your local repo
 !IMPORTANT - NEVER push the config folder to git
 - Create a folder called 'config'
 - inside that folder create another folder called 'settings'
-- inside the settings folder create 'dev.json' and add the credentials located inside project-croc-bot-discord
+- inside the settings folder create 'dev.json' and add fill in the credentials below
 ```
 {
     "Version": "1.0.0",
