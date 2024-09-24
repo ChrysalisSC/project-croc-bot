@@ -1,20 +1,22 @@
 """
 Python Bot V2
 
+Date: 
+- 04/08/2024
 Description:
-This Python script serves as a template for creating a bot application. It can be used as a foundation for building various types of bots, such as chatbots, automation bots, or social media bots.
+- This Python script serves as a template for creating a bot application. It can be used as a foundation for building various types of bots, such as chatbots, automation bots, or social media bots.
 
-Author: Colton Trebbien
-Date: 04/08/2024
+Authors:
+- Colton Trebbien, Max Hopkins
 
 Dependencies:
 - [List of Python modules/libraries required]
 
 Usage:
-- [Instructions on how to use the bot, including any command-line arguments or configuration settings]
+- python main.py <env>
 
 Notes:
-- [Any additional notes or considerations for using the bot]
+
 """
 
 # IMPORTS
@@ -27,10 +29,12 @@ import time
 
 
 import utils.helpers as helpers
-
+from data.configure_database import start_database
 
 from cogs.fun_commands import FunCommands
 from cogs.fun_commands import setup as setup_fun_commands
+from cogs.fantasy import Fantasy
+from cogs.fantasy import setup as setup_fantasy
 
 import discord
 from discord.ext import commands, tasks
@@ -119,18 +123,12 @@ async def on_member_join(member):
     welcome_channel = bot.get_channel(1253800012630986854)
     if welcome_channel:
         await welcome_channel.send(embed=embed)
-
-
-
-
-         
+    
 @bot.event
 async def on_ready():
     helpers.log("main", f"Logged in as {bot.user.name}")
     await setup_fun_commands(bot)
-
- 
-
+    await setup_fantasy(bot)
 
 def main():
     if len(sys.argv) < 2:
@@ -146,11 +144,11 @@ def main():
         bot.env = env
 
         bot.run(str(config['DISCORD_API']))
+        
+        #check to see if we need to create the database
+        start_database(env)
     else:
         print("Failed to load configuration.")
-
-
- 
 
 if __name__ == "__main__":
     # Check if the environment is provided as a command-line argument
