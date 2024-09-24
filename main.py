@@ -148,7 +148,7 @@ def main():
         #check to see if we need to create the database
         start_database(env)
     else:
-        print("Failed to load configuration.")
+        print("Failed to load configuration. Please check that you have added the /config/settings/{env}.json file.")
 
 if __name__ == "__main__":
     # Check if the environment is provided as a command-line argument
