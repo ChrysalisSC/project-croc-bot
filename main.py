@@ -35,6 +35,9 @@ from cogs.fun_commands import FunCommands
 from cogs.fun_commands import setup as setup_fun_commands
 from cogs.fantasy import Fantasy
 from cogs.fantasy import setup as setup_fantasy
+from cogs.repository import Repository
+from cogs.repository import setup as setup_repository
+
 
 import discord
 from discord.ext import commands, tasks
@@ -130,6 +133,12 @@ async def on_ready():
     await setup_fun_commands(bot)
     await setup_fantasy(bot)
 
+    #if its the main bot running - not used for testing
+    if bot.env == 'prod':
+        await setup_repository(bot)
+    if bot.env == 'test':
+        await setup_repository(bot)
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python main.py <env>")
@@ -146,7 +155,8 @@ def main():
         bot.run(str(config['DISCORD_API']))
         
         #check to see if we need to create the database
-        start_database(env)
+        if env == 'prod':
+            start_database(env)
     else:
         print("Failed to load configuration. Please check that you have added the /config/settings/{env}.json file.")
 
