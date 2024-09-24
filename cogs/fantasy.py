@@ -1,25 +1,101 @@
 import requests
 from bs4 import BeautifulSoup
 import pytz
-
-
+import random
+import asyncio
+import datetime
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 
 import utils.helpers as helpers
+
+THESPORTSDB_API_KEY = '3' 
 
 class Fantasy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.timezone = pytz.timezone("America/New_York")  
-        self.fantasy_update_task.start()  # Start the task when the cog is loaded
+        
+
+    def get_random_nfl_team_image(self):
+        """Fetch a random NFL team logo or image using TheSportsDB API."""
+        url = f"https://www.thesportsdb.com/api/v1/json/{THESPORTSDB_API_KEY}/search_all_teams.php"
+        
+        # Fetching NFL teams (NFL league id in TheSportsDB is 4391)
+        params = {'l': 'NFL'}
+        
+        response = requests.get(url, params=params)
+        
+        if response.status_code == 200:
+            # Parse the response and get a list of teams
+            data = response.json()
+          
+            teams = data['teams']
+            
+            # Choose a random team
+            random_team = random.choice(teams)
+            
+            # Return the team badge/logo image URL
+            print("RANDOM TEAM", random_team)
+            return random_team['strFanart3']  # Badge URL for the team logo
+        else:
+            print(f"Error fetching data: {response.status_code}")
+            return None  # Handle errors gracefully
+        
+    def parse_standings(self):
+        """Parse the weekly fantasy football data from the NFL website."""
+        url = "https://fantasy.nfl.com/league/12293941?standingsTab=standings#leagueHomeStandings=leagueHomeStandings%2C%2Fleague%2F12293941%253FstandingsTab%253Dstandings%2Creplace"
+        
+        response = requests.get(url)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        print(soup)
+        # Find the week number
+        # Find the standings table
+        standings_table = soup.find('table', class_='tableType-team hasGroups')
+        
+        # Create a list to store standings data
+        standings = []
+
+        # Parse the table rows (teams) from the tbody
+        rows = standings_table.find('tbody').find_all('tr')
+
+        for row in rows:
+            rank = row.find('td', class_='teamRank').text.strip()  # Rank
+            team_name = row.find('a', class_='teamName').text.strip()  # Team Name
+            record = row.find('td', class_='teamRecord').text.strip()  # Win-Loss-Tie Record
+            win_pct = row.find('td', class_='teamWinPct').text.strip()  # Win Percentage
+            streak = row.find('td', class_='teamStreak').text.strip()  # Streak
+            waiver_priority = row.find('td', class_='teamWaiverPriority').text.strip()  # Waiver Priority
+            points_for = row.find_all('td', class_='teamPts')[0].text.strip()  # Points For
+            points_against = row.find_all('td', class_='teamPts')[1].text.strip()  # Points Against
+            
+            # Append the parsed data into the standings list
+            standings.append({
+                'rank': rank,
+                'team_name': team_name,
+                'record': record,
+                'win_pct': win_pct,
+                'streak': streak,
+                'waiver_priority': waiver_priority,
+                'points_for': points_for,
+                'points_against': points_against
+            })
+
+        # Optionally return or print the parsed standings data
+   
+
+       
+        week = soup.find('ul', class_='weekNav weekNav-mini').find('li', class_='wl').text
+        return standings, week
 
 
     def parse_fantasy_data(self, html_content):
         soup = BeautifulSoup(html_content, 'html.parser')
-        
+        #print(soup)
         match_results = []
         matches_list = soup.find('ul', class_='ss ss-7')
         # Iterate through each 'li' element within the 'ul'
@@ -38,65 +114,31 @@ class Fantasy(commands.Cog):
                 'team2': team2,
                 'score2': score2
             })
-        print("MATCH RESULTS", match_results)
-        return match_results
-        """
-        for item in transaction_items:
-            transaction = {}
-            transaction
-            transaction['type'] = item.find('div', class_='mw')['class'][1].split('-')[1]
-            transaction['team'] = item.find('a', class_='teamName').text.strip()
-            
-            players = item.find_all('span', class_='c')
-            transaction['players'] = []
-            for player in players:
-                player_info = {}
-                player_info['name'] = player.find('a', class_='playerCard').text.strip()
-                player_info['position'] = player.find('em').text.strip().split(' - ')[0]
-                player_info['nfl_team'] = player.find('em').text.strip().split(' - ')[1]
-                transaction['players'].append(player_info)
-            
-            date_str = item.find('span', class_='date').text.strip()
-            transaction['date'] = datetime.strptime(date_str, '%a, %b %d, %I:%M%p')
-            
-            transactions.append(transaction)
-   
-        # Parse scoreboard
-        scoreboard = {}
-        scoreboard_div = soup.find('div', id='leagueHomeScoreStrip')
-        if scoreboard_div:
-            scoreboard['week'] = scoreboard_div.find('li', class_='wl').text.strip()
-            matchups = scoreboard_div.find_all('li', class_='ss ss-7')
-            scoreboard['matchups'] = []
-            for matchup in matchups:
-                teams = matchup.find_all('div')
-                matchup_data = {
-                    'team1': {
-                        'name': teams[0].find('em').text.strip(),
-                        'score': teams[0].find('span', class_='teamTotal').text.strip()
-                    },
-                    'team2': {
-                        'name': teams[1].find('em').text.strip(),
-                        'score': teams[1].find('span', class_='teamTotal').text.strip()
-                    }
-                }
-                scoreboard['matchups'].append(matchup_data)
-        
-        return {'transactions': transactions, 'scoreboard': scoreboard}
-        """
-    @commands.command()
-    async def fantasy_update(self, ctx):
+        #print("MATCH RESULTS", match_results)
+        #<ul class="weekNav weekNav-mini"><li class="wl wl-3 first">Week 3
+        week = soup.find('ul', class_='weekNav weekNav-mini').find('li', class_='wl').text
+
+
+        return match_results, week
+ 
+    @app_commands.command(
+        name="fantasy_update",
+        description="Check the latest fantasy football updates"
+    )
+    async def fantasy_update(self, interaction):
         """Fetch and display the latest fantasy football updates"""
         url = "https://fantasy.nfl.com/league/12293941?standingsTab=standings#leagueHomeStandings=leagueHomeStandings%2C%2Fleague%2F12293941%253FstandingsTab%253Dschedule%2Creplace"
-        
+        await interaction.response.defer()
         response = requests.get(url)
         response.raise_for_status()  # Raise an exception for bad status codes
         
-        data = self.parse_fantasy_data(response.text)
+        data, week= self.parse_fantasy_data(response.text)
 
          # Create an embed to display the data
-        embed = discord.Embed(title="Fantasy Football Updates", color=0x00ff00)
-        embed.set_thumbnail(url="https://example.com/logo.png")
+        nfl_team_logo_url = self.get_random_nfl_team_image()
+        embed = discord.Embed(title="Fantasy Football Updates", color=0xFFFF00)
+        if nfl_team_logo_url:
+            embed.set_image(url=nfl_team_logo_url)
         
         # Create an embed to display the data
         for match in data:
@@ -117,13 +159,77 @@ class Fantasy(commands.Cog):
                 inline=True
             )
           
-        
         # Add a footer for additional info
-        embed.set_footer(text="Week 3 | Fantasy Football")
+        embed.set_footer(text=f"{week} | Fantasy Football")
+        await interaction.followup.send(embed=embed)
 
+    @app_commands.command(
+        name="standings",
+        description="Check the latest fantasy football standings"
+    )
+    async def standings(self, interaction):
+        """Fetch and display the latest fantasy football updates"""
+        url = "https://fantasy.nfl.com/league/12293941?standingsTab=standings#leagueHomeStandings=leagueHomeStandings%2C%2Fleague%2F12293941%253FstandingsTab%253Dschedule%2Creplace"
+        await interaction.response.defer()
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
         
+        data, week = self.parse_standings()
+        print(data , week)
+        # Create an embed to display the data
+
+        fire_emoji = "🔥"
+        ice_emoji = "❄️"
+        up_arrow = "⬆️"
+   
+        up = "🢁"
+        down = "🢃"
+        nfl_team_logo_url = self.get_random_nfl_team_image()
+        embed = discord.Embed(title=f"Fantasy Football Standings | {week}", color=0xFFFF00)
+        if nfl_team_logo_url:
+            embed.set_image(url=nfl_team_logo_url)
+            
+
+        for team in data:
+            # Left column (Rank and Team Name)
+            team_position = team['rank'].split(' ')[0]
+            movement = team['rank'].split(' ')[1]
+
+            if 'W' in team['streak']:
+                 streak_with_emoji = f"{fire_emoji} {team['streak']}"
+            elif 'L' in team['streak']:
+                streak_with_emoji = f"{ice_emoji} {team['streak']}"
+            else:
+                streak_with_emoji = team['streak']
+
+            if "+" in movement:
+                movement_with_arrow = f"{up} {movement}"
+            elif "-" in movement:
+                movement_with_arrow = f"{down} {movement}"
+            else:
+                movement_with_arrow = movement
+            
+            # Formatted string with padded spacing for better alignment
+            standings_info = (
+                f"*Streak:* {streak_with_emoji:<5}\n"
+                f"*Win Pct:* {team['win_pct']:<5}\n"
+              
+                f"*Points For:* {team['points_for']:<10} *Points Against:* {team['points_against']:<10}"
+            )
+            
+            # Add a field for each team with aligned information
+            embed.add_field(
+                name=f"**{team_position}. {movement_with_arrow} | ({team['record']}) - {team['team_name']}**",
+                value=standings_info,
+                inline=False
+            )
+
+        # Add a footer with additional info
+        embed.set_footer(text=f"Fantasy Football Standings | {week}")
         
-        await ctx.send(embed=embed)
+        # Send the embed to the channel
+        await interaction.followup.send(embed=embed)
+
     
       
 
