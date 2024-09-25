@@ -30,7 +30,7 @@ class FunCommands(commands.Cog):
     )
     async def roll_dice(self, interaction: discord.Integration, number: int = None):
         user_id = interaction.user.id
-        if number == None:
+        if number == None or number <= 0:
             number = 6
             roll_result = random.randint(1, 6)
         else:
