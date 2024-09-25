@@ -230,6 +230,62 @@ class Fantasy(commands.Cog):
         # Send the embed to the channel
         await interaction.followup.send(embed=embed)
 
+    @app_commands.command(
+        name="winnersandlosersthisweek",
+        description="Custom output of fantasy rankings"
+    )
+    async def winnersandlosersthisweek(self, interaction):
+        """Fetch and display the latest fantasy football updates"""
+        url = "https://fantasy.nfl.com/league/12293941?standingsTab=standings#leagueHomeStandings=leagueHomeStandings%2C%2Fleague%2F12293941%253FstandingsTab%253Dschedule%2Creplace"
+        await interaction.response.defer()
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        
+        data, week = self.parse_standings()
+        print(data , week)
+        # Create an embed to display the data
+
+        fire_emoji = "🔥"
+        ice_emoji = "❄️"   
+            
+        winners = []
+        losers = []
+
+        for team in data:
+            # Left column (Rank and Team Name)
+            if 'W' in team['streak']:
+                 winners.append(team)
+            elif 'L' in team['streak']:
+                losers.append(team)
+            else:
+                losers.append(team)
+        
+
+        embedWinners = discord.Embed(title=f"WINNERS | {week}", color=0x00FF00)
+        sorted_winners = sorted(winners, key=lambda x: int(x['streak'].split('W')[1]), reverse=True)
+        i = 0
+        for team in sorted_winners:
+            i+=1
+            embedWinners.add_field(
+                name=f"**{i}: {team['team_name']} - {fire_emoji}{team['streak']} | Overall: ({team['record']})**",
+                value="",
+                inline=False
+            )
+
+        embedLosers = discord.Embed(title=f"LOSERS | {week}", color=0xFF0000)
+        sorted_losers = sorted(losers, key=lambda x: int(x['streak'].split('L')[1]), reverse=True)
+        i = 0
+        for team in sorted_losers:
+            i+=1
+            embedLosers.add_field(
+                name=f"** {i}: {team['team_name']} - {ice_emoji}{team['streak']} | Overall: ({team['record']})**",
+                value="",
+                inline=False
+            )
+
+        # Send the embed to the channel
+        await interaction.followup.send(embeds=[embedWinners, embedLosers])
+
     
       
 
