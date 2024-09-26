@@ -37,7 +37,10 @@ from cogs.fantasy import Fantasy
 from cogs.fantasy import setup as setup_fantasy
 from cogs.repository import Repository
 from cogs.repository import setup as setup_repository
-
+from cogs.games import Games
+from cogs.games import setup as setup_games
+from cogs.persistant_views import PersistantViews
+from cogs.persistant_views import setup as setup_persistant_views
 
 import discord
 from discord.ext import commands, tasks
@@ -129,15 +132,31 @@ async def on_member_join(member):
     
 @bot.event
 async def on_ready():
+
+
+    # Setup Database if in prod or dev. (automatically skips if already created)
+    if bot.env == 'prod' or bot.env == 'dev':
+        start_database(bot.env)
     helpers.log("main", f"Logged in as {bot.user.name}")
+
+    #setup views first so that other cogs can add their view registration to list
+    await setup_persistant_views(bot)
+    
+
+    # Setup the cogs
     await setup_fun_commands(bot)
     await setup_fantasy(bot)
+    await setup_games(bot)
 
     #if its the main bot running - not used for testing
     if bot.env == 'prod':
         await setup_repository(bot)
     if bot.env == 'test':
         await setup_repository(bot)
+
+    #load all registered views
+    persistent_views = bot.get_cog("PersistantViews") 
+    persistent_views.load_views()  # Load views when setting up
 
 def main():
     if len(sys.argv) < 2:
@@ -152,11 +171,8 @@ def main():
         print("Configuration loaded successfully")
         bot.env = env
 
+
         bot.run(str(config['DISCORD_API']))
-        
-        #check to see if we need to create the database
-        if env == 'prod':
-            start_database(env)
     else:
         print("Failed to load configuration. Please check that you have added the /config/settings/{env}.json file.")
 
