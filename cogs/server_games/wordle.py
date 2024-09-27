@@ -209,7 +209,7 @@ class Wordle(commands.Cog):
             BOX_COLOR = "black"  # Box color
             LINE_WIDTH = 2  # Width of grid lines
             TEXT_COLOR = "white"  # Text color
-            TEXT_FONT = ImageFont.truetype("arialbd.ttf", 30)  # Font for the text
+            TEXT_FONT = ImageFont.truetype("fonts/Nunito/Nunito-Light.ttf", 30)  # Font for the text
 
             # Calculate image size
             image_width = 248
