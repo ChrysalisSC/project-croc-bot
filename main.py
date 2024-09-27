@@ -41,6 +41,13 @@ from cogs.games import Games
 from cogs.games import setup as setup_games
 from cogs.persistant_views import PersistantViews
 from cogs.persistant_views import setup as setup_persistant_views
+from cogs.broadcast import Broadcast
+from cogs.broadcast import setup as setup_broadcast
+from cogs.threads import ThreadManager
+from cogs.threads import setup as setup_threads
+from cogs.server_games.wordle import Wordle
+from cogs.server_games.wordle import setup as setup_wordle 
+
 
 import discord
 from discord.ext import commands, tasks
@@ -111,6 +118,18 @@ async def on_message(message):
        
     await bot.process_commands(message)
 
+async def delete_all_threads():
+    # Iterate over each guild the bot is connected to
+    for guild in bot.guilds:
+        # Iterate over each channel in the guild
+        for channel in guild.text_channels:
+            # Fetch the threads in the channel
+            threads = channel.threads
+            # Delete each thread
+            for thread in threads:
+                await thread.delete()
+
+
 @bot.event
 async def on_member_join(member):
     # Define the welcome embed
@@ -135,9 +154,11 @@ async def on_ready():
 
 
     # Setup Database if in prod or dev. (automatically skips if already created)
-    if bot.env == 'prod' or bot.env == 'dev':
-        start_database(bot.env)
+    start_database(bot.env)
     helpers.log("main", f"Logged in as {bot.user.name}")
+
+    #remove all threads
+    await delete_all_threads()
 
     #setup views first so that other cogs can add their view registration to list
     await setup_persistant_views(bot)
@@ -147,6 +168,10 @@ async def on_ready():
     await setup_fun_commands(bot)
     await setup_fantasy(bot)
     await setup_games(bot)
+    await setup_broadcast(bot)
+    await setup_threads(bot)
+    await setup_wordle(bot)
+
 
     #if its the main bot running - not used for testing
     if bot.env == 'prod':

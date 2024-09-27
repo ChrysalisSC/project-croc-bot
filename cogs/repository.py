@@ -44,6 +44,7 @@ class Repository(commands.Cog):
 
     @tasks.loop(minutes=20)  # Check every minute
     async def check_repo(self):
+        print("checking repo for updates")
         await self.check_push_events()
         await self.check_pull_requests()
 

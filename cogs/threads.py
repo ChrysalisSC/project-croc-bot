@@ -90,6 +90,7 @@ class ThreadManager(commands.Cog):
                 description=selected_description,
                 color=0xFFFFFF,
             )
+            embed.set_footer(text=f"This thread will be deleted after the time expires. Delete the thread early by clicking the thread ( {thread_name} ) and selecting 'Delete Thread'.")
             await thread.send(embed=embed)
 
             # Run the thread deletion in the background
@@ -186,7 +187,8 @@ class ThreadManager(commands.Cog):
     async def before_thread_task(self):
         await self.bot.wait_until_ready()
 
-async def setup(bot, config):
+async def setup(bot):
+    config = helpers.open_config(bot.env)
     await bot.add_cog(ThreadManager(bot, config))
     helpers.log("EXAMPLE", "Setting up Example cog...")
 

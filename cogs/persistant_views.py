@@ -35,7 +35,7 @@ class PersistantViews(commands.Cog):
 
     def add_view_to_database(self, view_identifier, view_registration, channel_id, timeout_date="", disabled=0):
         #Add the view Id to the database
-
+        print("ADDING VIEW TO DATABASE", view_identifier, view_registration, channel_id, timeout_date, disabled)
         conn = sqlite3.connect(self.database_name)
         c = conn.cursor()
     
@@ -48,6 +48,7 @@ class PersistantViews(commands.Cog):
          
       
         conn.close()
+        return True
     
 
     def load_views(self):
