@@ -79,7 +79,7 @@ class Wordle(commands.Cog):
         conn = sqlite3.connect(self.database)
         c = conn.cursor()
         c.execute("INSERT INTO wordle (user_id, thread_id, word, attempts, guess_1, guess_2, guess_3, guess_4, guess_5, guess_6) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (user_id, thread_id, word, attempts, *guesses, ""))
+                (user_id, thread_id, word, attempts, *guesses))
         conn.commit()
         conn.close()
 
