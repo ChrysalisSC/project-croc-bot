@@ -47,7 +47,8 @@ from cogs.threads import ThreadManager
 from cogs.threads import setup as setup_threads
 from cogs.server_games.wordle import Wordle
 from cogs.server_games.wordle import setup as setup_wordle 
-
+from cogs.music import Music
+from cogs.music import setup as setup_music
 
 import discord
 from discord.ext import commands, tasks
@@ -176,8 +177,11 @@ async def on_ready():
     #if its the main bot running - not used for testing
     if bot.env == 'prod':
         await setup_repository(bot)
+        await setup_music(bot)
     if bot.env == 'test':
         await setup_repository(bot)
+    if bot.env == 'dev':
+        await setup_music(bot)
 
     #load all registered views
     persistent_views = bot.get_cog("PersistantViews") 
@@ -199,7 +203,7 @@ def main():
 
         bot.run(str(config['DISCORD_API']))
     else:
-        print("Failed to load configuration. Please check that you have added the /config/settings/{env}.json file.")
+        print(f"Failed to load configuration. Please check that you have added the /config/settings/{env}.json file.")
 
 if __name__ == "__main__":
     # Check if the environment is provided as a command-line argument
