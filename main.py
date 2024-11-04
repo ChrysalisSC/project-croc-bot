@@ -49,6 +49,8 @@ from cogs.server_games.wordle import Wordle
 from cogs.server_games.wordle import setup as setup_wordle 
 from cogs.music import Music
 from cogs.music import setup as setup_music
+from cogs.level import Level
+from cogs.level import setup as setup_level
 
 import discord
 from discord.ext import commands, tasks
@@ -172,6 +174,7 @@ async def on_ready():
     await setup_broadcast(bot)
     await setup_threads(bot)
     await setup_wordle(bot)
+    await setup_level(bot)
 
 
     #if its the main bot running - not used for testing
@@ -181,7 +184,8 @@ async def on_ready():
     if bot.env == 'test':
         await setup_repository(bot)
     if bot.env == 'dev':
-        await setup_music(bot)
+        #await setup_music(bot)
+        pass
 
     #load all registered views
     persistent_views = bot.get_cog("PersistantViews") 
