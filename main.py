@@ -30,6 +30,7 @@ import time
 
 import utils.helpers as helpers
 from data.configure_database import start_database
+from data.user_data import update_last_seen, update_num_chats
 
 from cogs.fun_commands import FunCommands
 from cogs.fun_commands import setup as setup_fun_commands
@@ -51,6 +52,12 @@ from cogs.music import Music
 from cogs.music import setup as setup_music
 from cogs.level import Level
 from cogs.level import setup as setup_level
+from cogs.grand_exchange import GrandExchange
+from cogs.grand_exchange import setup as setup_grand_exchange
+from cogs.shop import Shop
+from cogs.shop import setup as setup_shop
+from cogs.profile import Profile
+from cogs.profile import setup as setup_profile
 
 import discord
 from discord.ext import commands, tasks
@@ -112,9 +119,12 @@ async def on_message(message):
     except:
         helpers.log("MAIN", f"{message.author} - ERROR MESSAGE")
 
+ 
     # await add_xp(bot, message.author.id, 50, 'XP')
     # print("added xp")
-    # update_last_seen( message.author.id, time)
+    time = str(helpers.get_time())
+    update_last_seen( message.author.id, time, bot.env)
+    update_num_chats(message.author.id, bot.env)
     # print("updated last seen")
     # await add_renown_to_user(bot, message.author.id, 50,  await get_selected_track(message.author.id))
     # print("added renown")
@@ -175,6 +185,9 @@ async def on_ready():
     await setup_threads(bot)
     await setup_wordle(bot)
     await setup_level(bot)
+    await setup_grand_exchange(bot)
+    await setup_shop(bot)
+    await setup_profile(bot)
 
 
     #if its the main bot running - not used for testing

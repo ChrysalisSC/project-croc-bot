@@ -6,6 +6,7 @@ import utils.helpers as helpers
 import random
 #import userdata
 import data.user_data as user_data
+import traceback
 
 responses_agreed = [
     "You have already agreed to the deal.",
@@ -88,6 +89,7 @@ class Broadcast(commands.Cog):
         self.persistent_views = bot.get_cog("PersistantViews")
         # Register the games view with the persistent views system
         self.persistent_views.register_view("deal_view", self.create_deal_view)
+        self.persistent_views.register_view("profile_view", self.create_profile_view)
       
 
     @commands.command()
@@ -120,11 +122,68 @@ class Broadcast(commands.Cog):
     def create_deal_view(self, view_identifier):
         return DealView(view_identifier, self.bot)
     
-      
+        # Create the view for the Grand Exchange with buttons specific to each store
+    def create_profile_view(self, view_identifier):
+        return ProfileView(view_identifier, self.bot)
+  
+     
+    @commands.command()
+    async def send_profile(self, ctx):
+        """shows the profile view for a user"""
+       
+        view_identifier = f"profile_{ctx.channel.id}"
+        view = self.create_profile_view(view_identifier)
+
+        embed = discord.Embed(
+            title=f"Profile", 
+            description="Select an option below:", 
+            color=0x00ff00
+        )
+        embed.set_footer(text="Use the buttons to make your selection.")
+
+        # Add the view to the database for persistence
+        self.persistent_views.add_view_to_database(view_identifier, "profile_view", ctx.channel.id)
+        await ctx.send(embed=embed, view=view)
+
+    # Create the view for the Grand Exchange with buttons specific to each store
+    def create_profile_view(self, view_identifier):
+        return ProfileView(view_identifier, self.bot)
+  
     
 
+class ProfileView(discord.ui.View):
+    def __init__(self, view_identifier, bot):
+        super().__init__(timeout=None)
+        self.view_identifier = view_identifier
+        self.bot = bot
+       
+    
+    @discord.ui.button(label="Update Profile", style=discord.ButtonStyle.primary, custom_id="update_profile")
+    async def buy_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            print(f"Starting Update profile")
+            ThreadManager = self.bot.get_cog("ThreadManager")
+            print("Got thread manager")
+            if ThreadManager is not None:
+                thread = await ThreadManager.create_thread(interaction.channel_id, f"USER PROFILE", 1140, 600, interaction.user)
+                if thread != False:
+                    await interaction.response.send_message(f"Welcome to your profile!", ephemeral=True)
+                    profile_cog = self.bot.get_cog("Profile")
+                    await profile_cog.shop_start(thread, interaction.user.id) 
+                else:
+                    await interaction.response.send_message("You already have an open thread", ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "Thread manager not found", ephemeral=True
+                )
+        except Exception as e:
+            error_message = traceback.format_exc()
+            helpers.log("SHOP", f"Error starting Shop: {error_message}")
+            
+        return True
+   
+  
 async def setup(bot):
     #name of your log(name of cog, print_info)
     helpers.log("EXAMPLE", "Setting up Example cog...")
     await bot.add_cog(Broadcast(bot))
-   

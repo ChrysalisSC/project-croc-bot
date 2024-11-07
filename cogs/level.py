@@ -10,11 +10,19 @@ class Level(commands.Cog):
         self.bot = bot
         self.database = f"{self.bot.env}_database.db"
 
-   
     def add_xp(self, user_id: int, points: int):
         # Add points to a user or insert if they don't exist
         with sqlite3.connect(self.database) as conn:
             cursor = conn.cursor()
+
+            cursor.execute("SELECT current_xp, total_xp, level FROM users WHERE user_id = ?", (user_id,))
+            result = cursor.fetchone()
+            
+            # If the user is not found, exit without adding XP
+            if result is None:
+                return None
+
+
             cursor.execute('''INSERT OR IGNORE INTO users 
                               (user_id, current_xp, total_xp, level) 
                               VALUES (?, 0, 0, 1)''', (user_id,))

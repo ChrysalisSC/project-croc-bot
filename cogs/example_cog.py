@@ -19,9 +19,9 @@ class MyCog(commands.Cog):
         """Event listener that runs when the bot is ready"""
         print(f'{self.bot.user} has connected to Discord!')
 
-async def setup(bot, config):
+async def setup(bot):
     #name of your log(name of cog, print_info)
     helpers.log("EXAMPLE", "Setting up Example cog...")
-    await bot.add_cog(MyCog(bot, config))
+    await bot.add_cog(MyCog(bot))
    
 
