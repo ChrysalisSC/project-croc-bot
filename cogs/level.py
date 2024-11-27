@@ -24,7 +24,7 @@ class Level(commands.Cog):
     
     @tasks.loop(minutes=3)
     async def check_voice_channels(self):
-        time = helpers.get_pacific_time()
+        time = helpers.get_time()
         print(f"Checking voice channels at {time}")
         for guild in self.bot.guilds:
             for member in guild.members:
