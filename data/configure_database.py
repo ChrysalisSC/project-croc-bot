@@ -365,6 +365,15 @@ def start_database(env):
         ''',
         (100203, 'header', 'The Traveler', 'destiny', 'Yes, Guardian. What do you need?', 'common', 200)
     )
+
+    cursor.execute(
+        '''
+        INSERT OR REPLACE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (100204, 'header', 'Aksis', 'destiny', 'Wrath of the Machine', 'common', 200)
+    )
+
     cursor.execute(
         '''
         INSERT OR REPLACE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
@@ -412,6 +421,34 @@ def start_database(env):
         ''',
         (200205, 'title', 'Forsaken', 'destiny', 'Yes, Guardian. What do you need?', 'common', 100)
     )
+
+
+    #The gigajoe Collection
+    
+    cursor.execute(
+        '''
+        INSERT OR REPLACE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (100300, 'header', 'Fury and Strength', 'gigajoe', 'Im going to cut off your head now.', 'common', 200)
+    )
+
+    cursor.execute(
+        '''
+        INSERT OR REPLACE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (100301, 'header', 'Isshin', 'gigajoe', 'I must cut you down before you fall to Shura.', 'common', 200)
+    )
+
+    cursor.execute(
+        '''
+        INSERT OR REPLACE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (100302, 'header', 'Hollow', 'gigajoe', 'No cost too great. No mind to think. No will to break.', 'common', 200)
+    )
+
   
     
 

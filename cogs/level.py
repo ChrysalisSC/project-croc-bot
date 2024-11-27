@@ -22,7 +22,7 @@ class Level(commands.Cog):
         print("config:",config)
         return config['CROCCHRONICLES']
     
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=3)
     async def check_voice_channels(self):
         for guild in self.bot.guilds:
             for member in guild.members:
