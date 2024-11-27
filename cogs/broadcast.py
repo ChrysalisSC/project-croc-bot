@@ -152,7 +152,7 @@ class Broadcast(commands.Cog):
         self.persistent_views.register_view("daily_currency_view", self.create_currency_view)
         self.midnight_reset.start()
 
-    @tasks.loop(time=[datetime.time(hour=18, minute=50, second=0, microsecond=0)])
+    @tasks.loop(time=[datetime.time(hour=19, minute=0, second=0, microsecond=0)])
     async def midnight_reset(self):
         """
         Reset lockouts at midnight.
@@ -326,7 +326,7 @@ class Broadcast(commands.Cog):
 
         title = user_data.get_items_by_ids([profile_data[1]], self.env)
 
-        print("title:", title)  
+      
 
         interests = user_data.get_items_by_ids([profile_data[5], profile_data[6], profile_data[7], profile_data[8], profile_data[9]],self.env )
         #interests = user_data.get_items_by_ids(interests, self.bot.env)
