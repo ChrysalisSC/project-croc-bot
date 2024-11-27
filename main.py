@@ -196,7 +196,7 @@ async def on_ready():
     if bot.env == 'test':
         await setup_repository(bot)
     if bot.env == 'dev':
-        #await setup_music(bot)
+        await setup_music(bot)
         pass
 
     #load all registered views

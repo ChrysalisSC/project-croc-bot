@@ -267,23 +267,32 @@ class Music(commands.Cog):
             
     @tasks.loop(minutes=30)
     async def check_playlist_updates(self):
-        print("Checking for new songs...")
-        channel =  self.music_channel
-        result = await self.get_newest_songs_from_playlist("2Mq9TtE1Hv3c20UvuX3UwB", "config/last_music_id.json")
-        if result:
-            for item in result:
-                track_name, artist, spotify_link, image_url, artist_id= item  # Include image_url
-                await self.create_music_embed(channel, "KPOP Radio", track_name, artist, spotify_link, image_url, artist_id)
-        
+        try:
+            print("Checking for new songs...")
 
-        print("Checking for new songs for pop...")
-        result = await self.get_newest_songs_from_playlist("37i9dQZF1DWUa8ZRTfalHk", "config/last_music_id.json")
-        if result:
-            for item in result:
-                track_name, artist, spotify_link, image_url, artist_id= item  # Include image_url
-                await self.create_music_embed(channel, "RISING Radio", track_name, artist, spotify_link, image_url, artist_id)
-      
-        print("finished checking for new songs...")
+            # For KPOP Radio
+            channel = self.music_channel
+            result = await self.get_newest_songs_from_playlist("2Mq9TtE1Hv3c20UvuX3UwB", "config/last_music_id.json")
+            if result:
+                for item in result:
+                    track_name, artist, spotify_link, image_url, artist_id = item
+                    await self.create_music_embed(channel, "KPOP Radio", track_name, artist, spotify_link, image_url, artist_id)
+
+            # For RISING Radio
+            print("Checking for new songs for pop...")
+          
+            result = await self.get_newest_songs_from_playlist("37i9dQZF1DWUa8ZRTfalHk", "config/last_music_id.json")
+            if result:
+                for item in result:
+                    track_name, artist, spotify_link, image_url, artist_id = item
+                    await self.create_music_embed(channel, "RISING Radio", track_name, artist, spotify_link, image_url, artist_id)
+
+            print("Finished checking for new songs...")
+        
+        except Exception as e:
+            print(f"Error occurred while checking playlist updates: {e}")
+        finally:
+            print("Loop completed, waiting for next cycle.")
    
     
     @commands.command()
