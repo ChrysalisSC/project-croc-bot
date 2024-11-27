@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 
 import utils.helpers as helpers
@@ -9,6 +9,8 @@ import data.user_data as user_data
 import traceback
 from utils.image_create import create_profile_card, create_level_card
 import requests
+import datetime
+import pytz
 
 import sqlite3
 responses_agreed = [
@@ -59,6 +61,8 @@ responses_refused = [
     "The crocs might not let you forget this decision—watch your tail!"
 ]
 
+#get time for midnight pacific
+MIDNIGHT = datetime.datetime.now(pytz.timezone('US/Pacific')).replace(hour=0, minute=0, second=0, microsecond=0)
 
 class DealView(discord.ui.View):
     def __init__(self, view_identifier, bot):
@@ -94,16 +98,12 @@ class SupplyDropView(discord.ui.View):
         #supply_drop_{supply_id}_{ctx.channel.id}"
         self.supply_id = int(view_identifier.split("_")[2])
     
-    @discord.ui.button(label="Collect Drop", style=discord.ButtonStyle.primary, custom_id="exchange_buy_{self.supply_id}")
+    @discord.ui.button(label="Collect Daily Reward", style=discord.ButtonStyle.primary, custom_id="exchange_buy_{self.supply_id}")
     async def buy_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
            
             print("supply_id", self.supply_id)
             #TODO:
-            #if current_time >= self._view.date:
-            #   await interaction.response.send_message('The timeout duration has already passed.', ephemeral=True)
-            #   return
-        
             if user_data.check_user_item(interaction.user.id, self.supply_id, self.bot.env):
                 await interaction.response.send_message('You have already claimed this reward.', ephemeral=True)
                 return
@@ -117,15 +117,50 @@ class SupplyDropView(discord.ui.View):
             
         return True
 
+class CurrencyDropView(discord.ui.View):
+    def __init__(self, view_identifier, bot):
+        super().__init__(timeout=None)
+        self.view_identifier = view_identifier
+        self.bot = bot
+
+    @discord.ui.button(label="COLLECT YOUR DAILY REWARD", style=discord.ButtonStyle.primary, custom_id="currency_daily_button")
+    async def daily_currency_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            #check if user has already claimed
+            if user_data.is_user_lockout(interaction.user.id, 1, self.bot.env):
+                await interaction.response.send_message('You have already claimed this reward today.', ephemeral=True)
+                return
+
+            user_data.add_user_funds(interaction.user.id, 50, self.bot.env)
+            #lockout uer
+            user_data.lockout_user(interaction.user.id, 1,  self.bot.env)
+            await interaction.response.send_message('You have claimed your reward and earned 50 Credits!', ephemeral=True)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            helpers.log("BROADCAST", f"Error with currnecy: {error_message}")
+        return True
+
+
+
 class Broadcast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.env = bot.env
         self.persistent_views = bot.get_cog("PersistantViews")
-        # Register the games view with the persistent views system
         self.persistent_views.register_view("deal_view", self.create_deal_view)
         self.persistent_views.register_view("profile_view", self.create_profile_view)
         self.persistent_views.register_view("supply_drop_view", self.create_supply_view)
+        self.persistent_views.register_view("daily_currency_view", self.create_currency_view)
+        self.midnight_reset.start()
+
+    @tasks.loop(time=[datetime.time(hour=18, minute=50, second=0, microsecond=0)])
+    async def midnight_reset(self):
+        """
+        Reset lockouts at midnight.
+        """
+        print("Midnight Reset")
+        user_data.reset_lockouts(self.env)
+        return
       
     @commands.command()
     async def send_deal(self, ctx):
@@ -164,6 +199,27 @@ class Broadcast(commands.Cog):
     def create_supply_view(self, view_identifier):
         return SupplyDropView(view_identifier, self.bot)
     
+    def create_currency_view(self, view_identifier):
+        return CurrencyDropView(view_identifier, self.bot)
+    
+    
+
+
+   
+    
+    @commands.command()
+    async def currency_drop(self, ctx):
+        """sends a embed with a currency button"""
+        view_identifier = f"daily_currency_{ctx.channel.id}"
+        view = self.create_currency_view(view_identifier)
+        embed = discord.Embed(title="Daily Currency!", description="Be rewarded every day!", color=0xFFA500)
+        file = discord.File(f"images/customization/daily_drop.png", filename="image.png")
+        embed.set_image(url="attachment://image.png")
+        self.persistent_views.add_view_to_database(view_identifier, "daily_currency_view", ctx.channel.id)
+        await ctx.send(embed=embed, view=view, file=file)
+        return
+
+        
 
     @commands.command()
     async def supply_drop(self, ctx, supply_id: int):
@@ -216,6 +272,27 @@ class Broadcast(commands.Cog):
         user_data.add_user_funds(member.id, funds, self.bot.env)
         await ctx.send(f"Added {funds} to {member.name}'s account")
 
+   
+    @app_commands.command(
+        name="balance",
+        description="Check How much currency you have"
+    )
+    async def balance(self, interaction: discord.Integration, member: discord.Member = None):
+        #get currency by geting users database
+        if member is None:
+            member = interaction.user
+        else:  
+            member = member
+        user_id = member.id
+
+        user_data_info = user_data.get_all_profile_data(user_id, self.env)[0]
+        print("user_data_info", user_data_info)
+        embed = discord.Embed(
+            title="Balance",
+            description=f"{member.display_name} has {user_data_info[5]} coins",
+            color=discord.Color.blurple()
+        )
+        await interaction.response.send_message(embed=embed)
      
     @app_commands.command(
         name="profile",
@@ -267,6 +344,30 @@ class Broadcast(commands.Cog):
         await interaction.response.send_message(file=file)
 
     @commands.command()
+    async def daily_lockout(self, ctx):
+        
+        embed = discord.Embed(
+            title="Bot Info",
+            description="This bot is a test bot for testing purposes.",
+            color=discord.Color.blurple()
+        )
+        embed.add_field(name="Leveling", value="This bot has a leveling system that allows users to gain experience points and level up by chatting in the server and in voice.\n You gain 1 xp every minute in voice chat.\n You can check you level progress by using /profile", inline=False)
+        embed.add_field(name="Currency", value="This bot has a currency system that allows users to earn currency by chatting in the server and in voice.\n You can check you balance by using /balance", inline=False)
+        await ctx.send(embed=embed)
+    
+    @commands.command()
+    async def info_bot(self, ctx):
+        #explains how the bot is works
+        embed = discord.Embed(
+            title="Bot Info",
+            description="This bot is a test bot for testing purposes.",
+            color=discord.Color.blurple()
+        )
+        embed.add_field(name="Leveling", value="This bot has a leveling system that allows users to gain experience points and level up by chatting in the server and in voice.\n You gain 1 xp every minute in voice chat.\n You can check you level progress by using /profile", inline=False)
+        embed.add_field(name="Currency", value="This bot has a currency system that allows users to earn currency by chatting in the server and in voice.\n You can check you balance by using /balance", inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command()
     async def level_prof(self, ctx):
         """shows the profile view for a user"""
         #call create image and send it 
@@ -283,17 +384,8 @@ class Broadcast(commands.Cog):
 
         await ctx.send(file=file)
 
-    @commands.command()
-    async def add_default_items(self, ctx):
-        """adds default items to the user"""
-        #connect to items table then add the defualt items
-        conn = sqlite3.connect(f'{self.env}_database.db')
-        cursor = conn.cursor()
 
-
-        await ctx.send("Added default items to your account")
-
-
+    
 
 class ProfileView(discord.ui.View):
     def __init__(self, view_identifier, bot):

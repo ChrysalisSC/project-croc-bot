@@ -413,3 +413,61 @@ def check_user_item(user_id, item_id, env):
     result = cursor.fetchone()
     connection.close()
     return result
+
+
+def lockout_user(user_id, lockout, env):
+    add_user_to_lockouts(user_id, env)
+    if not (1 <= lockout <= 10):
+        raise ValueError("Invalid lockout number. It must be between 1 and 10.")
+
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    
+    # Dynamically build the query for the specified lockout column
+    query = f'UPDATE lockouts SET lockout_{lockout} = 1 WHERE user_id = ?'
+    
+    cursor.execute(query, (user_id,))
+    connection.commit()
+    connection.close()
+
+def is_user_lockout(user_id, lockout, env):
+    add_user_to_lockouts(user_id, env)
+    if not (1 <= lockout <= 10):
+        raise ValueError("Invalid lockout number. It must be between 1 and 10.")
+
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    
+    # Dynamically build the query for the specified lockout column
+    query = f'SELECT lockout_{lockout} FROM lockouts WHERE user_id = ?'
+    
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    connection.close()
+    
+    return result[0] == 1 if result else False
+
+def add_user_to_lockouts(user_id, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    
+    cursor.execute('''
+        INSERT OR IGNORE INTO lockouts (user_id)
+        VALUES (?)
+    ''', (user_id,))
+    
+    connection.commit()
+    connection.close()
+
+def reset_lockouts(env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    
+    cursor.execute('''
+        UPDATE lockouts
+        SET lockout_1 = 0, lockout_2 = 0, lockout_3 = 0, lockout_4 = 0, lockout_5 = 0,
+            lockout_6 = 0, lockout_7 = 0, lockout_8 = 0, lockout_9 = 0, lockout_10 = 0
+    ''')
+    
+    connection.commit()
+    connection.close()

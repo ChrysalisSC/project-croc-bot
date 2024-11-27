@@ -86,6 +86,20 @@ def start_database(env):
                     FOREIGN KEY (equipped_header) REFERENCES items(item_id),
                     FOREIGN KEY (equipped_profile_color) REFERENCES items(item_id)
                 )''')
+    # a table that will lockout a user   
+    cursor.execute('''CREATE TABLE IF NOT EXISTS lockouts (
+                    user_id INTEGER PRIMARY KEY,
+                    lockout_1 INTEGER DEFAULT 0, -- daily currency drop
+                    lockout_2 INTEGER DEFAULT 0,
+                    lockout_3 INTEGER DEFAULT 0,
+                    lockout_4 INTEGER DEFAULT 0,
+                    lockout_5 INTEGER DEFAULT 0,
+                    lockout_6 INTEGER DEFAULT 0,
+                    lockout_7 INTEGER DEFAULT 0,
+                    lockout_8 INTEGER DEFAULT 0,
+                    lockout_9 INTEGER DEFAULT 0,
+                    lockout_10 INTEGER DEFAULT 0
+                )''')
 
     #headers  100000 - 199999
     #titles   200000 - 299999
@@ -399,6 +413,7 @@ def start_database(env):
         (200205, 'title', 'Forsaken', 'destiny', 'Yes, Guardian. What do you need?', 'common', 100)
     )
   
+    
 
 
 

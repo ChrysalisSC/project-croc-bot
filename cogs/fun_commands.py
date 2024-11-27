@@ -22,6 +22,33 @@ class FunCommands(commands.Cog):
             return member.display_name
         else:
             return "Unknown"
+        
+    @commands.command()
+    async def info_fun(self, ctx):
+        # Get all commands from this cog
+        commands_list = [
+            {"name": cmd.name, "description": cmd.description or "No description available."}
+            for cmd in self.__class__.__dict__.values()
+            if isinstance(cmd, app_commands.Command)
+        ]
+
+        # Create the embed
+        embed = discord.Embed(
+            title="Available Commands",
+            description="Here is a list of all the commands you can use:",
+            color=discord.Color.blue()
+        )
+        for cmd in commands_list:
+            embed.add_field(name=f"`/{cmd['name']}`", value=cmd['description'], inline=False)
+
+        embed.set_footer(text="Use /command_name to execute a command.")
+
+
+        #other commands
+        embed.add_field(name="`/profile`", value="Display your profile", inline=False)
+        
+        await ctx.send(embed=embed)
+        
 
     
     @app_commands.command(
@@ -198,19 +225,7 @@ class FunCommands(commands.Cog):
             else:
                 await interaction.response.send_message("Failed to generate an insult. Please try again later.")
 
-    @app_commands.command(
-        name="gameoftheday",
-        description="Fetches the game of the day from Connection Games API"
-    )
-    async def game_of_the_day(self, interaction: discord.Integration):
-        response = requests.get("https://connection.games/api/v1/today")
-        if response.status_code == 200:
-            game_data = response.json()
-            game_name = game_data.get("game_name")
-            game_description = game_data.get("game_description")
-            await interaction.response.send_message(f"🎮 Game of the Day: {game_name}\nDescription: {game_description}")
-        else:
-            await interaction.response.send_message("Failed to fetch the game of the day. Please try again later.")
+  
 
     @app_commands.command(
         name="compliment",

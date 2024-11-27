@@ -78,7 +78,7 @@ bot = discord_bot(command_prefix="!", intents=discord.Intents.all())
 script_dir = os.path.dirname(os.path.abspath(__file__)) #this is main
 parent_dir = os.path.dirname(script_dir) 
 
-    
+   
 @bot.command()
 async def sync(ctx):
     CONFIG = helpers.open_config(bot.env)
@@ -141,11 +141,6 @@ async def delete_all_threads():
             # Delete each thread
             for thread in threads:
                 await thread.delete()
-
-
-
-
-
 
 @bot.event
 async def on_member_join(member):
