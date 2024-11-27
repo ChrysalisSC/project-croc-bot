@@ -24,6 +24,8 @@ class Level(commands.Cog):
     
     @tasks.loop(minutes=3)
     async def check_voice_channels(self):
+        time = helpers.get_pacific_time()
+        print(f"Checking voice channels at {time}")
         for guild in self.bot.guilds:
             for member in guild.members:
                 if member.voice and member.voice.channel:
@@ -90,7 +92,7 @@ class Level(commands.Cog):
                               WHERE user_id = ?''', 
                            (new_current_xp, new_total_xp, level, user_id))
             conn.commit()
-            print("new_current_xp:",new_current_xp)
+            print(f"User {user_id} gained {points} XP. Total XP: {new_total_xp}, Level: {level}")
             # Return the new level if leveled up
             if level_up:
                 user_data.add_user_funds(user_id, 100, self.env)

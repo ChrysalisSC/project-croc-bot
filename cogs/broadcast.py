@@ -157,6 +157,7 @@ class Broadcast(commands.Cog):
         """
         Reset lockouts at midnight.
         """
+       
         print("Midnight Reset")
         user_data.reset_lockouts(self.env)
         return
