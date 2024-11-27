@@ -248,7 +248,7 @@ def draw_opacity_box_rounded_with_text(image, position, text, font, color=(0, 0,
 
 def create_badge_element(background_img, badge_box_position, badge_box_size, badges, font_path, font_size=20, text_color=(255, 255, 255), padding=5):
     # Create a new transparent image for the badge grid
-    print("BAdges", badges)
+   
     badge_grid = Image.new('RGBA', badge_box_size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge_grid)
     font = ImageFont.truetype(font_path, font_size)
@@ -269,7 +269,7 @@ def create_badge_element(background_img, badge_box_position, badge_box_size, bad
         else:
             badge = {"badge": "default"}
 
-        print(badge)
+      
         # Load badge image
         try:
             badge_img = Image.open(f"images/badges/{badge[0]}.png").convert("RGBA")
@@ -341,7 +341,7 @@ def create_hexagon_gem(draw, position, color, number, radius=100, outline_width=
 
 def create_profile_card(header_image_path, name, title, level, badges, timespent,  currency, xp, interests, booster, profile_picture_path = "temp_profile_picture.png"):
     # Card dimensions
-    print("PARAMS:", header_image_path, name, title, level, badges, timespent,  currency, xp, interests, profile_picture_path)
+    print("Creating profile card for user: ", name)
     card_width, card_height = 800 , 600
     header_height = 500
     xp_bar_size = (589, 30)
@@ -410,7 +410,7 @@ def create_profile_card(header_image_path, name, title, level, badges, timespent
     #sort text based on lengh smallest first
     interests = sorted(interests, key=lambda x: len(x['item_name']))
 
-    print("Interests:", interests)
+  
     for text in interests:
         # Calculate the text width using the font
         text = text['item_name']
@@ -443,9 +443,7 @@ def create_profile_card(header_image_path, name, title, level, badges, timespent
     xp_percentage = xp / 100
     filled_width = max(1, int(xp_bar_size[0] * xp_percentage))  # Ensure at least 1px width
     bar_radius = xp_bar_size[1] // 2  # Half the height for rounded ends
-    print("bar_radius", bar_radius)
-    print("filled_width", filled_width)
-
+  
     # Draw background bar
     draw_rounded_rectangle(draw, 
                            xp_bar_position, 
@@ -526,7 +524,7 @@ def create_profile_card(header_image_path, name, title, level, badges, timespent
     profile_card.save("profile_card.png")
 
 def create_level_card(header_image_path, name, title, level, xp , profile_picture_path = "temp_profile_picture.png"):
-    print("PARAMS:", header_image_path, name, title, level, xp, profile_picture_path)
+   
      # Card dimensions
     card_width, card_height = 800 , 200
     header_height = 500
@@ -560,16 +558,14 @@ def create_level_card(header_image_path, name, title, level, xp , profile_pictur
     font_medium = ImageFont.truetype(font_path, 50)
     font_small = ImageFont.truetype(font_path, 35)
     
-    # Draw XP bar
-    print("XP:", xp)
+
    
     xp = max(6, min(int(xp), 100)) #needs to be atleast 6 to draw pixels incircle of start of bar
  
     xp_percentage = xp / 100
     filled_width = max(1, int(xp_bar_size[0] * xp_percentage))  # Ensure at least 1px width
     bar_radius = xp_bar_size[1] // 2  # Half the height for rounded ends
-    print("bar_radius", bar_radius)
-    print("filled_width", filled_width)
+  
 
     draw = ImageDraw.Draw(profile_card)
 

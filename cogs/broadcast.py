@@ -278,6 +278,7 @@ class Broadcast(commands.Cog):
     )
     async def balance(self, interaction: discord.Integration, member: discord.Member = None):
         #get currency by geting users database
+        print(f"User {interaction.user.id} requested their balance")
         if member is None:
             member = interaction.user
         else:  
@@ -300,6 +301,7 @@ class Broadcast(commands.Cog):
     async def profile_commannd(self, interaction: discord.Integration, member: discord.Member = None):
         """shows the profile view for a user"""
         #call create image and send it 
+        print(f"User {interaction.user.id} requested their profile")
         if member is None:
             member = interaction.user
         else:  

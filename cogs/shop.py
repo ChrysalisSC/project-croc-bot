@@ -76,7 +76,7 @@ class ShopSelect(discord.ui.Select):
         connection = sqlite3.connect(self.database)
         cursor = connection.cursor()
         
-        print("Item ID:", item_id)
+     
         query = '''SELECT * FROM items WHERE item_id = ?'''
         cursor.execute(query, (item_id,))
         columns = [column[0] for column in cursor.description]  # Get column names
@@ -84,7 +84,7 @@ class ShopSelect(discord.ui.Select):
         connection.close()
         if result:
             result = dict(zip(columns, result))
-        print(result)
+     
         return result
             
             

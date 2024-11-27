@@ -19,7 +19,6 @@ class GrandExchangeView(discord.ui.View):
         try:
             print(f"starting shop for {self.store_name}")
             ThreadManager = self.bot.get_cog("ThreadManager")
-            print("Got thread manager")
             if ThreadManager is not None:
                 thread = await ThreadManager.create_thread(interaction.channel_id, f"{self.store_name}", 1140, 600, interaction.user)
                 if thread != False:
@@ -49,7 +48,6 @@ class GrandExchange(commands.Cog):
     @commands.command()
     async def grandexchange(self, ctx, store_name: str):
         """Command to show the Grand Exchange view for a specific store."""
-        print("store_name", store_name)
         view_identifier = f"grand_exchange_{store_name}_{ctx.channel.id}"
         view = self.create_exchange_view(view_identifier)
 

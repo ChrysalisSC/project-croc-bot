@@ -85,6 +85,7 @@ class ProfileSelect(discord.ui.Select):
         selected_item_id = int(self.values[0])
 
         # Update the user's equipped item in the database
+        print(f"user {self.user_id} equipped item {selected_item_id}")
         await user_data.change_equipped_item(self.user_id, self.item_type, selected_item_id, self.env)
         
         # Send confirmation message
@@ -113,6 +114,7 @@ class InterestSelect(discord.ui.Select):
         selected_item_ids = [int(value) for value in self.values]
 
         # Update the user's interests in the database
+        print(f"user {self.user_id} selected interests {selected_item_ids}")
         await user_data.update_user_interests(self.user_id, selected_item_ids, self.env)
         
         # Send confirmation message

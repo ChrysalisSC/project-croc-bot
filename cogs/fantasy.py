@@ -38,7 +38,7 @@ class Fantasy(commands.Cog):
             random_team = random.choice(teams)
             
             # Return the team badge/logo image URL
-            print("RANDOM TEAM", random_team)
+         
             return random_team['strFanart3']  # Badge URL for the team logo
         else:
             print(f"Error fetching data: {response.status_code}")
@@ -52,7 +52,7 @@ class Fantasy(commands.Cog):
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        print(soup)
+       
         # Find the week number
         # Find the standings table
         standings_table = soup.find('table', class_='tableType-team hasGroups')
@@ -175,7 +175,7 @@ class Fantasy(commands.Cog):
         response.raise_for_status()  # Raise an exception for bad status codes
         
         data, week = self.parse_standings()
-        print(data , week)
+      
         # Create an embed to display the data
 
         fire_emoji = "🔥"
@@ -242,7 +242,7 @@ class Fantasy(commands.Cog):
         response.raise_for_status()  # Raise an exception for bad status codes
         
         data, week = self.parse_standings()
-        print(data , week)
+      
         # Create an embed to display the data
 
         fire_emoji = "🔥"

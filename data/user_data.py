@@ -64,7 +64,7 @@ async def add_user_to_user_database(user_id, username, env, bot):
 
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
-    print("USERNAME: ", username)
+    print("ADDED USERNAME: ", username)
     cursor.execute('''
         INSERT OR REPLACE INTO users 
         (user_id, username, approved, current_xp, level, total_xp, currency, admin_status, time_spent, chats, last_seen, booster)
@@ -261,7 +261,6 @@ def get_user_profile(user_id, env):
     connection.close()
     
     if result:
-        print("RESULT: ", result)
         keys = ['equipped_title', 'equipped_badge', 'equipped_header', 'equipped_profile_color', 'interest_1', 'interest_2', 'interest_3', 'interest_4', 'interest_5']
         return dict(zip(keys, result))
     return None
@@ -305,7 +304,7 @@ def get_all_owned_items(user_id, item_type, env):
     return formatted_items
 
 async def change_equipped_item( user_id, item_type, item_id, env):
-    print("IM CALLED")
+  
     connection = sqlite3.connect(f'{env}_database.db')
     cursor = connection.cursor()
     column_name = f"equipped_{item_type}"
@@ -342,7 +341,6 @@ async def change_equipped_item( user_id, item_type, item_id, env):
 def get_items_by_ids(item_ids, env):
     connection = sqlite3.connect(f'{env}_database.db')
     cursor = connection.cursor()
-    print("ITEM IDS: ", item_ids)
     if not item_ids:
         print("No item IDs provided.")
         return []
@@ -373,7 +371,7 @@ def get_items_by_ids(item_ids, env):
 async def update_user_interests(user_id, interest_ids, env):
     connection = sqlite3.connect(f'{env}_database.db')
     cursor = connection.cursor()
-    print("INTEREST IDS: ", interest_ids)
+   
     # Pad with `None` if fewer than 5 interests are selected
     interests = interest_ids + [None] * (5 - len(interest_ids))
 
