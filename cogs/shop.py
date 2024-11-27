@@ -48,6 +48,10 @@ class ShopSelect(discord.ui.Select):
             if currency_amount < selected_item_details['price']:
                 await button_interaction.response.send_message("You don't have enough currency to buy this item.", ephemeral=True)
                 return
+            #check if user already has this item
+            if user_data.check_user_item(button_interaction.user.id, selected_item_details['item_id'], self.env):
+                await button_interaction.response.send_message("You already own this item.", ephemeral=True)
+                return
             user_data.remove_user_funds(button_interaction.user.id, selected_item_details['price'], self.env)
             user_data.add_item_to_user(button_interaction.user.id, selected_item_details['item_id'], self.env)
 
@@ -59,7 +63,6 @@ class ShopSelect(discord.ui.Select):
         button_view = discord.ui.View()
         button_view.add_item(buy_button)
        
-
         if is_image:
             self.preview_message = await interaction.response.send_message(embed=embed, file=file, view=button_view, ephemeral=True)
         else:
@@ -74,16 +77,18 @@ class ShopSelect(discord.ui.Select):
         cursor = connection.cursor()
         
         print("Item ID:", item_id)
-        query = '''SELECT item_name, description FROM items WHERE item_id = ?'''
+        query = '''SELECT * FROM items WHERE item_id = ?'''
         cursor.execute(query, (item_id,))
+        columns = [column[0] for column in cursor.description]  # Get column names
         result = cursor.fetchone()
         connection.close()
-        
-        return {
-            'item_name': result[0],
-            'description': result[1],
-            'item_id': item_id
-        } if result else {'item_name': "Unknown Item", 'description': "No details available.", 'item_id': None}
+        if result:
+            result = dict(zip(columns, result))
+        print(result)
+        return result
+            
+            
+         
 
 
 class ShopView(discord.ui.View):
@@ -132,8 +137,8 @@ class Shop(commands.Cog):
         embed.set_footer(text="Use the dropdowns to view item details and make a purchase.")
 
         #add store image
-        file = discord.File(f"images/server_icons/store.jpg", filename=f"store.jpg")
-        embed.set_image(url=f"attachment://store.jpg")
+        file = discord.File(f"images/stores/{shop_name}_1.png", filename=f"store.png")
+        embed.set_image(url=f"attachment://store.png")
 
         # Add fields to the embed for each item type
         for item_type, item_list in shop_items.items():

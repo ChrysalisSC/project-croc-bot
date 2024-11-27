@@ -7,7 +7,10 @@ import random
 #import userdata
 import data.user_data as user_data
 import traceback
+from utils.image_create import create_profile_card, create_level_card
+import requests
 
+import sqlite3
 responses_agreed = [
     "You have already agreed to the deal.",
     "Looks like you're already on board with the croc crew!",
@@ -63,7 +66,6 @@ class DealView(discord.ui.View):
         self.view_identifier = view_identifier
         self.bot = bot
       
-
     @discord.ui.button(label="Agree", style=discord.ButtonStyle.success, custom_id="agree_croc_deal")
     async def deal1_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # add user to database or check to see if they aready approved
@@ -71,7 +73,10 @@ class DealView(discord.ui.View):
         user = user_data.check_if_user_exists(interaction.user.id, self.bot.env)
         if user == False:
             await user_data.add_user_to_user_database(interaction.user.id, interaction.user.name, self.bot.env, self.bot)
-            await interaction.response.send_message(f"A Sharp Decision {interaction.user.name.upper()} - Let me show you around...\n Here, Take this role *[role name/id here]* and lets get to it!\n I’m all about that croc-and-roll lifestyle!\n \n *looks at you with a grinning smile*", ephemeral=True)
+          
+            role_name = "Croc Crew"  # Replace with your desired role name
+            role = discord.utils.get(interaction.guild.roles, name=role_name)
+            await interaction.response.send_message(f"A Sharp Decision {interaction.user.name.upper()} - Let me show you around...\n Here, Take this role {role} and lets get to it!\n I’m all about that croc-and-roll lifestyle!\n \n *looks at you with a grinning smile*", ephemeral=True)
         else:
             await interaction.response.send_message(random_response, ephemeral=True)
            
@@ -81,6 +86,36 @@ class DealView(discord.ui.View):
         random_response = random.choice(responses_refused)
         await interaction.response.send_message(random_response, ephemeral=True)
 
+class SupplyDropView(discord.ui.View):
+    def __init__(self, view_identifier, bot):
+        super().__init__(timeout=None)
+        self.view_identifier = view_identifier
+        self.bot = bot
+        #supply_drop_{supply_id}_{ctx.channel.id}"
+        self.supply_id = int(view_identifier.split("_")[2])
+    
+    @discord.ui.button(label="Collect Drop", style=discord.ButtonStyle.primary, custom_id="exchange_buy_{self.supply_id}")
+    async def buy_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+           
+            print("supply_id", self.supply_id)
+            #TODO:
+            #if current_time >= self._view.date:
+            #   await interaction.response.send_message('The timeout duration has already passed.', ephemeral=True)
+            #   return
+        
+            if user_data.check_user_item(interaction.user.id, self.supply_id, self.bot.env):
+                await interaction.response.send_message('You have already claimed this reward.', ephemeral=True)
+                return
+           
+            user_data.add_item_to_user(interaction.user.id, self.supply_id, self.bot.env)
+            
+            await interaction.response.send_message('You have claimed your reward!', ephemeral=True)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            helpers.log("BROADCAST", f"Error starting Shop: {error_message}")
+            
+        return True
 
 class Broadcast(commands.Cog):
     def __init__(self, bot):
@@ -90,8 +125,8 @@ class Broadcast(commands.Cog):
         # Register the games view with the persistent views system
         self.persistent_views.register_view("deal_view", self.create_deal_view)
         self.persistent_views.register_view("profile_view", self.create_profile_view)
+        self.persistent_views.register_view("supply_drop_view", self.create_supply_view)
       
-
     @commands.command()
     async def send_deal(self, ctx):
         """sends a embed with a deal or no deal buttons"""
@@ -99,15 +134,15 @@ class Broadcast(commands.Cog):
         view = self.create_deal_view(view_identifier)
 
         deal_offer = (
-            "**Psst! You there! Yes, you! Come closer for a very special offer!**\n"
-            "I’ve seen you popping up here and there—must be fate leading you to this deal!\n"
-            "I cant say just what it is yet, but I can promise **YOU** my dear friend! \n"
-            "This isn't just any deal... it's a *suspiciously delightful* one!\n"
-            "Choose wisely, because I guarantee that no one has *ever* regretted a deal with a crocodile!\n"
+            "Psst! Hey, you! Yes, YOU! Step right up, I've got something truly special for you!\n"
+            "I've noticed you lurking around, fate must have brought you to this very moment! \n"
+            "I can't spill all the details just yet, but trust me, my friend...\n"
+            "This isn't just any ordinary deal... I'm offering a special invitation!\n"
+            "Choose wisely, because I assure you, no one has ever regretted making a deal with a crocodile!"
         )
 
         embed = discord.Embed(title="A Suspicious Deal?", description=deal_offer, color=0xFFA500)
-        embed.set_footer(text="Use the buttons to make your selection.")
+        embed.set_footer(text="Select 'AGREE' or 'REFUSE'. Agreement will add you to the Croc Crew!")
 
         # Add the view to the database for persistence
         #set image
@@ -125,8 +160,35 @@ class Broadcast(commands.Cog):
         # Create the view for the Grand Exchange with buttons specific to each store
     def create_profile_view(self, view_identifier):
         return ProfileView(view_identifier, self.bot)
-  
-     
+    
+    def create_supply_view(self, view_identifier):
+        return SupplyDropView(view_identifier, self.bot)
+    
+
+    @commands.command()
+    async def supply_drop(self, ctx, supply_id: int):
+        """sends a embed with a deal or no deal buttons"""
+        view_identifier = f"supply_drop_{supply_id}_{ctx.channel.id}"
+        view = self.create_supply_view(view_identifier)
+
+        embed = discord.Embed(title="SUPPLY DROP!", description="A new drop has arrived!", color=0xFFA500)
+      
+        #get item by id
+        item = user_data.get_items_by_ids([supply_id], self.env)
+   
+        embed.add_field(name=f"NAME: {item[0]['item_name']}", value=f"{item[0]['description']}", inline=False)
+        if item[0]['item_type'] == "header":
+                file = discord.File(f"images/customization/{supply_id}.png", filename="image.png")
+                embed.set_image(url="attachment://image.png")
+                #add description
+                self.persistent_views.add_view_to_database(view_identifier, "supply_drop_view", ctx.channel.id)
+                await ctx.send(embed=embed, view=view, file=file)
+                return
+
+        print(view_identifier, "supply_drop_view", ctx.channel.id)
+        self.persistent_views.add_view_to_database(view_identifier, "supply_drop_view", ctx.channel.id)
+        await ctx.send(embed=embed, view=view)
+
     @commands.command()
     async def send_profile(self, ctx):
         """shows the profile view for a user"""
@@ -149,7 +211,89 @@ class Broadcast(commands.Cog):
     def create_profile_view(self, view_identifier):
         return ProfileView(view_identifier, self.bot)
   
-    
+    @commands.command()
+    async def add_funds(self, ctx, member: discord.Member, funds: int):
+        user_data.add_user_funds(member.id, funds, self.bot.env)
+        await ctx.send(f"Added {funds} to {member.name}'s account")
+
+     
+    @app_commands.command(
+        name="profile",
+        description="Shows User Profile"
+    )
+    async def profile_commannd(self, interaction: discord.Integration, member: discord.Member = None):
+        """shows the profile view for a user"""
+        #call create image and send it 
+        if member is None:
+            member = interaction.user
+        else:  
+            member = member
+        user_id = member.id
+        booster = False
+        #check if member is booster
+        if member.premium_since is not None:
+            booster = True
+      
+        badge_data = user_data.get_owned_items(user_id, "badge", self.env)
+        user_data_info, profile_data = user_data.get_all_profile_data(user_id, self.env)
+        title = user_data.get_items_by_ids([profile_data[1]], self.env)
+
+        thumbnail_url = str(member.avatar.url)
+        # Download the profile picture from the URL and save it to a temporary file
+        profile_picture_path = "temp_profile_picture.png"
+        response = requests.get(thumbnail_url)
+        if response.status_code == 200:
+            with open(profile_picture_path, "wb") as f:
+                f.write(response.content)
+
+        title = user_data.get_items_by_ids([profile_data[1]], self.env)
+
+        print("title:", title)  
+
+        interests = user_data.get_items_by_ids([profile_data[5], profile_data[6], profile_data[7], profile_data[8], profile_data[9]],self.env )
+        #interests = user_data.get_items_by_ids(interests, self.bot.env)
+        create_profile_card(f"images/customization/{profile_data[3]}.png", member.display_name, title[0]['item_name'], user_data_info[4] , badge_data,user_data_info[10], user_data_info[6], user_data_info[3], interests, booster)
+
+        # Create the embed
+        embed = discord.Embed(
+            title="Profile",
+            description="Here's your profile card!",
+            color=discord.Color.blurple()
+        )
+
+        # file name is profile_card.png
+        file = discord.File("profile_card.png", filename="profile_card.png")
+
+        await interaction.response.send_message(file=file)
+
+    @commands.command()
+    async def level_prof(self, ctx):
+        """shows the profile view for a user"""
+        #call create image and send it 
+        user_id = ctx.author.id
+        badge_data = user_data.get_owned_items(user_id, "badge", self.env)
+        print("badge_data", badge_data)
+        level = 2
+       
+
+        create_level_card("images/customization/100001.png", "John Doe", "Champion", 1)
+
+        # file name is profile_card.png
+        file = discord.File("level_card.png", filename="level_card.png")
+
+        await ctx.send(file=file)
+
+    @commands.command()
+    async def add_default_items(self, ctx):
+        """adds default items to the user"""
+        #connect to items table then add the defualt items
+        conn = sqlite3.connect(f'{self.env}_database.db')
+        cursor = conn.cursor()
+
+
+        await ctx.send("Added default items to your account")
+
+
 
 class ProfileView(discord.ui.View):
     def __init__(self, view_identifier, bot):
@@ -169,7 +313,7 @@ class ProfileView(discord.ui.View):
                 if thread != False:
                     await interaction.response.send_message(f"Welcome to your profile!", ephemeral=True)
                     profile_cog = self.bot.get_cog("Profile")
-                    await profile_cog.shop_start(thread, interaction.user.id) 
+                    await profile_cog.start_profile(thread, interaction.user.id) 
                 else:
                     await interaction.response.send_message("You already have an open thread", ephemeral=True)
             else:
@@ -178,12 +322,14 @@ class ProfileView(discord.ui.View):
                 )
         except Exception as e:
             error_message = traceback.format_exc()
-            helpers.log("SHOP", f"Error starting Shop: {error_message}")
+            helpers.log("PROFILE", f"Error starting Shop: {error_message}")
             
         return True
-   
+
+
   
+     
 async def setup(bot):
     #name of your log(name of cog, print_info)
-    helpers.log("EXAMPLE", "Setting up Example cog...")
+    helpers.log("BROADCAST", "Setting up BROADCAST cog...")
     await bot.add_cog(Broadcast(bot))

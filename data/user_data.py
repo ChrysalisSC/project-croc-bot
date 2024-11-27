@@ -31,10 +31,12 @@ def update_last_seen(user_id, time, env):
 def update_num_chats(user_id, env):
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
-    
-    cursor.execute('SELECT chats FROM users WHERE user_id = ?', (user_id,))
-    chats = cursor.fetchone()[0]
-    chats += 1
+    try:
+        cursor.execute('SELECT chats FROM users WHERE user_id = ?', (user_id,))
+        chats = cursor.fetchone()[0]
+        chats += 1
+    except:
+        chats = 1
     
     cursor.execute('UPDATE users SET chats = ? WHERE user_id = ?', (chats, user_id))
     conn.commit()
@@ -56,15 +58,10 @@ async def add_user_to_user_database(user_id, username, env, bot):
         print(f"User with ID {user_id} not found in guild.")
         return False
 
-    # Check if user is server booster
-    # Check if user is admin
-    admin_status = 0
-    booster = 0
+    # Determine admin and booster status
+    admin_status = 1 if member.guild_permissions.administrator else 0
+    booster = 1 if member.premium_since is not None else 0
 
-    if member.premium_since is not None:
-        booster = 1
-    if member.guild_permissions.administrator:
-        admin_status = 1
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
     print("USERNAME: ", username)
@@ -73,9 +70,50 @@ async def add_user_to_user_database(user_id, username, env, bot):
         (user_id, username, approved, current_xp, level, total_xp, currency, admin_status, time_spent, chats, last_seen, booster)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (user_id, username, 1, 0, 1, 0, 0, admin_status, 0, 0, datetime.datetime.now(), booster))
+
+    #user_id INTEGER PRIMARY KEY,
+    #                equipped_title INTEGER,
+     #               equipped_badge INTEGER,
+     #               equipped_header INTEGER,
+      #              equipped_profile_color INTEGER,
+      #              intrest_1 TEXT,
+     #               intrest_2 TEXT,
+    #                intrest_3 TEXT,
+     #               intrest_4 TEXT,
+     #               intrest_5 TEXT,
+
+    # Insert default entries in `user_profile` if they don't already exist
+    cursor.execute('''
+        INSERT OR IGNORE INTO user_profile 
+        (user_id, equipped_title, equipped_badge, equipped_header, equipped_profile_color, interest_1, interest_2, interest_3, interest_4, interest_5) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (user_id, 200000, 600000, 100000, 400000, 300000, 300000, 300000, 300000, 300000))
+    
+    #add default items to user_items
+    cursor.execute('''
+        INSERT OR IGNORE INTO user_items 
+        (user_id, item_id, equipped, aquired_date) 
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, 200000, 1, datetime.datetime.now()))
+    cursor.execute('''
+        INSERT OR IGNORE INTO user_items 
+        (user_id, item_id, equipped, aquired_date) 
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, 600000, 1, datetime.datetime.now()))
+    cursor.execute('''
+        INSERT OR IGNORE INTO user_items 
+        (user_id, item_id, equipped, aquired_date) 
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, 100000, 1, datetime.datetime.now()))
+    cursor.execute('''
+        INSERT OR IGNORE INTO user_items 
+        (user_id, item_id, equipped, aquired_date) 
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, 400000, 1, datetime.datetime.now()))
+
+
     conn.commit()
     conn.close()
-
     role_name = "Croc Crew"  # Replace with your desired role name
     role = discord.utils.get(guild.roles, name=role_name)
     if role:
@@ -91,7 +129,7 @@ async def add_user_to_user_database(user_id, username, env, bot):
 
     return True
 
-def add_item_to_user(cursor, user_id, item_id, env):
+def add_item_to_user(user_id, item_id, env):
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
 
@@ -106,14 +144,12 @@ def add_item_to_user(cursor, user_id, item_id, env):
     conn.close()
     return True
 
-def equip_item(cursor, user_id, item_id, item_type, env):
+def equip_item(user_id, item_id, item_type, env):
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
 
     slot_mapping = {
-        'background': 'equipped_background',
         'title': 'equipped_title',
-        'badge': 'equipped_badge',
         'header': 'equipped_header',
         'profile_color': 'equipped_profile_color'
     }
@@ -139,7 +175,7 @@ def equip_item(cursor, user_id, item_id, item_type, env):
     conn.commit()
     conn.close()
 
-def user_owns_item(cursor, user_id, item_id, env):
+def user_owns_item(user_id, item_id, env):
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
     cursor.execute(
@@ -154,7 +190,7 @@ def user_owns_item(cursor, user_id, item_id, env):
     conn.close()
     return items
 
-def get_user_items(cursor, user_id, env):
+def get_user_items(user_id, env):
     conn = sqlite3.connect(f'{env}_database.db')
     cursor = conn.cursor()
     cursor.execute(
@@ -172,3 +208,208 @@ def get_user_items(cursor, user_id, env):
     conn.close()
     return items
   
+def check_user_funds(user_id, env):
+    conn = sqlite3.connect(f'{env}_database.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        '''
+        SELECT currency FROM users
+        WHERE user_id = ?
+        ''',
+        (user_id,)
+    )
+    currency = cursor.fetchone()[0]
+    conn.commit()
+    conn.close()
+    return currency
+
+def add_user_funds(user_id, amount, env):
+    conn = sqlite3.connect(f'{env}_database.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        '''
+        UPDATE users
+        SET currency = currency + ?
+        WHERE user_id = ?
+        ''',
+        (amount, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+def remove_user_funds(user_id, amount, env):
+    conn = sqlite3.connect(f'{env}_database.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        '''
+        UPDATE users
+        SET currency = currency - ?
+        WHERE user_id = ?
+        ''',
+        (amount, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+def get_user_profile(user_id, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''SELECT equipped_title, equipped_badge, equipped_header, equipped_profile_color, interest_1, interest_2, interest_3, interest_4, interest_5 
+                FROM user_profile WHERE user_id = ?'''
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    connection.close()
+    
+    if result:
+        print("RESULT: ", result)
+        keys = ['equipped_title', 'equipped_badge', 'equipped_header', 'equipped_profile_color', 'interest_1', 'interest_2', 'interest_3', 'interest_4', 'interest_5']
+        return dict(zip(keys, result))
+    return None
+
+def get_owned_items(user_id, item_type, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''SELECT items.item_id, items.item_name, items.price FROM items 
+                JOIN user_items ON items.item_id = user_items.item_id
+                WHERE user_items.user_id = ? AND items.item_type = ?'''
+    cursor.execute(query, (user_id, item_type))
+    items = cursor.fetchall()
+    connection.close()
+    return items
+
+
+def get_all_owned_items(user_id, item_type, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    # Get all items that are owned by the user, match item type, and include description from items table
+    query = '''SELECT items.item_id, items.item_name, items.price, items.description 
+                FROM items 
+                JOIN user_items ON items.item_id = user_items.item_id 
+                WHERE user_items.user_id = ? AND items.item_type = ?'''
+
+    cursor.execute(query, (user_id, item_type))
+    items = cursor.fetchall()
+    connection.close()
+    
+    # Format the result to include equipped status and description
+    formatted_items = [
+        {
+            "item_id": item[0], 
+            "item_name": item[1], 
+            "price": item[2], 
+            "description": item[3]  # Include description from the items table
+        } 
+        for item in items
+    ]
+   
+    return formatted_items
+
+async def change_equipped_item( user_id, item_type, item_id, env):
+    print("IM CALLED")
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    column_name = f"equipped_{item_type}"
+    query = f"UPDATE user_profile SET {column_name} = ? WHERE user_id = ?"
+    cursor.execute(query, (item_id, user_id))
+    connection.commit()
+
+    #before changing see which one is equpped == 1 and is the 
+    item_id_str = str(item_id)
+
+    # Step 1: Query all equipped items for the user
+    cursor.execute("SELECT item_id FROM user_items WHERE user_id = ? AND equipped = 1", (user_id,))
+    equipped_items = cursor.fetchall()
+
+    # Step 2: Iterate over the equipped items and update the one that matches the first digit of item_id
+    for equipped_item in equipped_items:
+        equipped_item_id = equipped_item[0]
+        
+        # Check if the first digit matches
+        if str(equipped_item_id)[0] == item_id_str[0]:
+            # Step 3: Update the matched item to "not equipped" (equipped = 0)
+            cursor.execute("UPDATE user_items SET equipped = 0 WHERE user_id = ? AND item_id = ?", (user_id, equipped_item_id))
+            connection.commit()
+            
+            # Break after updating the matched item
+            break
+
+    # Step 4: Update the selected item to "equipped" (equipped = 1)
+    cursor.execute("UPDATE user_items SET equipped = 1 WHERE user_id = ? AND item_id = ?", (user_id, item_id))
+    connection.commit()
+    connection.close()
+
+
+def get_items_by_ids(item_ids, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    print("ITEM IDS: ", item_ids)
+    if not item_ids:
+        print("No item IDs provided.")
+        return []
+
+    # Prepare query with placeholders for the IDs
+    placeholders = ', '.join('?' for _ in item_ids)
+    query = f"SELECT * FROM items WHERE item_id IN ({placeholders})"
+    
+    try:
+        # Execute the query
+        cursor.execute(query, item_ids)
+        rows = cursor.fetchall()
+        
+        # Fetch column names for creating dictionaries
+        column_names = [description[0] for description in cursor.description]
+        
+        # Transform rows into a list of dictionaries
+        items = [dict(zip(column_names, row)) for row in rows]
+        return items
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        # Always close the connection
+        connection.close()
+
+
+async def update_user_interests(user_id, interest_ids, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    print("INTEREST IDS: ", interest_ids)
+    # Pad with `None` if fewer than 5 interests are selected
+    interests = interest_ids + [None] * (5 - len(interest_ids))
+
+    try:
+        cursor.execute(
+            '''
+            UPDATE user_profile
+            SET interest_1 = ?,  interest_2 = ?,  interest_3 = ?,  interest_4 = ?,  interest_5 = ?
+            WHERE user_id = ?
+            ''',
+            (*interests, user_id)
+        )
+        connection.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        connection.close()
+
+def get_all_profile_data(user_id, env):
+    #get data from the user table and user_profile table
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''SELECT * FROM users WHERE user_id = ?'''
+    cursor.execute(query, (user_id,))
+    user_data = cursor.fetchone()
+    query = '''SELECT * FROM user_profile WHERE user_id = ?'''
+    cursor.execute(query, (user_id,))
+    profile_data = cursor.fetchone()
+    connection.close()
+    return user_data, profile_data
+
+def check_user_item(user_id, item_id, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''SELECT * FROM user_items WHERE user_id = ? AND item_id = ?'''
+    cursor.execute(query, (user_id, item_id))
+    result = cursor.fetchone()
+    connection.close()
+    return result

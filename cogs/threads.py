@@ -51,6 +51,21 @@ descriptions = [
 "Beware the reptilian real estate tycoon, he's ready to devour this thread in {minutes} minutes!"
 ]
 
+class LeaveThreadButton(discord.ui.View):
+    def __init__(self, thread, manager, author_id):
+        super().__init__(timeout=None)
+        self.thread = thread
+        self.manager = manager
+        self.author_id = author_id
+
+    @discord.ui.button(label="Leave & Delete Thread", style=discord.ButtonStyle.red)
+    async def leave_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.thread.delete()
+        print(f"Thread deleted: {self.thread.name}")
+        self.manager.current_thread_ids.pop(self.thread.id, None)
+        user_channel_key = (self.thread.parent.id, self.author_id)
+        self.manager.user_threads.pop(user_channel_key, None)  # Remove the tracking entry
+
 class ThreadManager(commands.Cog):
     def __init__(self, bot, config):
         self.bot = bot
@@ -90,8 +105,9 @@ class ThreadManager(commands.Cog):
                 description=selected_description,
                 color=0xFFFFFF,
             )
-            embed.set_footer(text=f"This thread will be deleted after the time expires. Delete the thread early by clicking the thread ( {thread_name} ) and selecting 'Delete Thread'.")
-            await thread.send(embed=embed)
+            embed.set_footer(text=f"This thread will be deleted after expires. Delete the thread early by clicking the thread ( {thread_name} ) and selecting 'Delete Thread'.")
+            view = LeaveThreadButton(thread, self, author.id)
+            await thread.send(embed=embed, view=view)
 
             # Run the thread deletion in the background
             asyncio.create_task(
@@ -99,7 +115,7 @@ class ThreadManager(commands.Cog):
                     thread, duration, thread_extended_duration, author
                 )
             )
-
+        
             return thread
         else:
             return False
@@ -190,5 +206,5 @@ class ThreadManager(commands.Cog):
 async def setup(bot):
     config = helpers.open_config(bot.env)
     await bot.add_cog(ThreadManager(bot, config))
-    helpers.log("EXAMPLE", "Setting up Example cog...")
+    helpers.log("THREADS", "Setting up THREADS cog...")
 

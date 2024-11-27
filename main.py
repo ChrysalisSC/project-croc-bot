@@ -143,6 +143,10 @@ async def delete_all_threads():
                 await thread.delete()
 
 
+
+
+
+
 @bot.event
 async def on_member_join(member):
     # Define the welcome embed

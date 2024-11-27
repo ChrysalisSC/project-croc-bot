@@ -55,14 +55,20 @@ class GrandExchange(commands.Cog):
 
         embed = discord.Embed(
             title=f"{store_name.upper()} EXCHANGE", 
-            description="Select an option below:", 
-            color=0x00ff00
+            description=f"Enter the store for the {store_name} collection.", 
+            color=0xFFFFFF
         )
-        embed.set_footer(text="Use the buttons to make your selection.")
+        embed.set_footer(text="Powered by the Grand Exchange")
 
+        #set image as the store name
+        image_path = f"images/stores/{store_name}.png"
+        file = discord.File(image_path, filename="store.png")
+
+        #add image to embed
+        embed.set_image(url="attachment://store.png")
         # Add the view to the database for persistence
         self.persistent_views.add_view_to_database(view_identifier, "exchange_view", ctx.channel.id)
-        await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view, file=file)
 
     # Create the view for the Grand Exchange with buttons specific to each store
     def create_exchange_view(self, view_identifier):
