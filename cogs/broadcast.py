@@ -141,7 +141,6 @@ class CurrencyDropView(discord.ui.View):
         return True
 
 
-
 class Broadcast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -414,7 +413,7 @@ class ProfileView(discord.ui.View):
                 )
         except Exception as e:
             error_message = traceback.format_exc()
-            helpers.log("PROFILE", f"Error starting Shop: {error_message}")
+            helpers.log("PROFILE", f"Error starting profile for {interaction.user.id}: {error_message}")
             
         return True
 
