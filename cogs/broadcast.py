@@ -139,6 +139,33 @@ class CurrencyDropView(discord.ui.View):
             error_message = traceback.format_exc()
             helpers.log("BROADCAST", f"Error with currnecy: {error_message}")
         return True
+    
+
+class ToggleBroadcastView(discord.ui.View):
+    def __init__(self, view_identifier, bot):
+        super().__init__(timeout=None)
+        self.view_identifier = view_identifier
+        self.bot = bot
+
+    @discord.ui.button(label="Toggle Broadcast Mentions", style=discord.ButtonStyle.primary, custom_id="Toggle Broadcast Metions")
+    async def toggle_broadcast_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            #check if user has already claimed
+            #get the current broadcast sstus
+            broadcast_status = user_data.get_broadcasts_status(interaction.user.id, self.bot.env)
+            if broadcast_status == 1:
+                user_data.set_broadcasts_status(interaction.user.id, 0, self.bot.env)
+                await interaction.response.send_message('Setting broadcast to FALSE, you will no longer get member mentioned', ephemeral=True)
+                return
+            else:
+                user_data.set_broadcasts_status(interaction.user.id, 1, self.bot.env)
+                await interaction.response.send_message('Setting broadcast to TRUE, you will now get member mentioned', ephemeral=True)
+                return
+           
+        except Exception as e:
+            error_message = traceback.format_exc()
+            helpers.log("BROADCAST", f"Error with toggle: {error_message}")
+        return True
 
 
 class Broadcast(commands.Cog):
@@ -150,6 +177,7 @@ class Broadcast(commands.Cog):
         self.persistent_views.register_view("profile_view", self.create_profile_view)
         self.persistent_views.register_view("supply_drop_view", self.create_supply_view)
         self.persistent_views.register_view("daily_currency_view", self.create_currency_view)
+        self.persistent_views.register_view("toggle_broadcast_view", self.create_toggle_broadcast_view)
         self.midnight_reset.start()
 
     @tasks.loop(time=[datetime.time(hour=19, minute=0, second=0, microsecond=0)])
@@ -202,11 +230,10 @@ class Broadcast(commands.Cog):
     def create_currency_view(self, view_identifier):
         return CurrencyDropView(view_identifier, self.bot)
     
+    def create_toggle_broadcast_view(self, view_identifier):
+        return ToggleBroadcastView(view_identifier, self.bot)
     
 
-
-   
-    
     @commands.command()
     async def currency_drop(self, ctx):
         """sends a embed with a currency button"""
@@ -271,6 +298,34 @@ class Broadcast(commands.Cog):
     async def add_funds(self, ctx, member: discord.Member, funds: int):
         user_data.add_user_funds(member.id, funds, self.bot.env)
         await ctx.send(f"Added {funds} to {member.name}'s account")
+
+    
+    @commands.command()
+    async def send_broadcast_toggle(self, ctx):
+        """sends a embed with a toggle button"""
+       
+        view_identifier = f"toggle_broadcast_{ctx.channel.id}"
+        view = self.create_toggle_broadcast_view(view_identifier)
+
+        embed = discord.Embed(
+            title=f"Toggle Broadcast member.mentions", 
+            description="Select toggle button below", 
+            color=0x00ff00
+        )
+
+        # Add the view to the database for persistence
+        self.persistent_views.add_view_to_database(view_identifier, "toggle_broadcast_view", ctx.channel.id)
+        await ctx.send(embed=embed, view=view)
+
+    # Create the view for the Grand Exchange with buttons specific to each store
+    def create_profile_view(self, view_identifier):
+        return ProfileView(view_identifier, self.bot)
+  
+    @commands.command()
+    async def add_funds(self, ctx, member: discord.Member, funds: int):
+        user_data.add_user_funds(member.id, funds, self.bot.env)
+        await ctx.send(f"Added {funds} to {member.name}'s account")
+
 
    
     @app_commands.command(

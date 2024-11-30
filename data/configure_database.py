@@ -24,9 +24,12 @@ def start_database(env):
                         time_spent INTEGER DEFAULT 0,
                         chats Integer DEFAULT 0,
                         last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        booster BOOLEAN DEFAULT FALSE
+                        booster BOOLEAN DEFAULT FALSE,
+                        broadcast BOOLEAN DEFAULT TRUE
                     )''')
     # create the views table
+
+    
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS views (
                         view_id TEXT PRIMARY KEY,

@@ -469,3 +469,21 @@ def reset_lockouts(env):
     
     connection.commit()
     connection.close()
+
+def get_broadcasts_status(user_id, env):
+    #select tthe broadcast col from users
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''SELECT broadcast FROM users WHERE user_id = ?'''
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    connection.close()
+    return result[0] if result else False
+
+def set_broadcasts_status(user_id, status, env):
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    query = '''UPDATE users SET broadcast = ? WHERE user_id = ?'''
+    cursor.execute(query, (status, user_id))
+    connection.commit()
+    connection.close()

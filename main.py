@@ -118,13 +118,15 @@ async def on_message(message):
         helpers.log("MAIN", f"{message.author} - {message.content}")
     except:
         helpers.log("MAIN", f"{message.author} - ERROR MESSAGE")
-
+    
+    
  
     # await add_xp(bot, message.author.id, 50, 'XP')
     # print("added xp")
     time = str(helpers.get_time())
     update_last_seen( message.author.id, time, bot.env)
     update_num_chats(message.author.id, bot.env)
+
     # print("updated last seen")
     # await add_renown_to_user(bot, message.author.id, 50,  await get_selected_track(message.author.id))
     # print("added renown")
@@ -163,8 +165,6 @@ async def on_member_join(member):
     
 @bot.event
 async def on_ready():
-
-
     # Setup Database if in prod or dev. (automatically skips if already created)
     start_database(bot.env)
     helpers.log("main", f"Logged in as {bot.user.name}")
@@ -175,7 +175,6 @@ async def on_ready():
     #setup views first so that other cogs can add their view registration to list
     await setup_persistant_views(bot)
     
-
     # Setup the cogs
     await setup_fun_commands(bot)
     await setup_fantasy(bot)
@@ -187,7 +186,6 @@ async def on_ready():
     await setup_grand_exchange(bot)
     await setup_shop(bot)
     await setup_profile(bot)
-
 
     #if its the main bot running - not used for testing
     if bot.env == 'prod':

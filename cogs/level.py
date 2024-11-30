@@ -15,7 +15,7 @@ class Level(commands.Cog):
         self.env = bot.env
         self.chronicles =self.set_croc(bot.env)
         self.check_voice_channels.start()  # Start the background task
-        self.level_speed = 2
+        self.level_speed = 50
     
     def set_croc(self, env):
         config = helpers.open_config(env)
@@ -47,7 +47,11 @@ class Level(commands.Cog):
 
                         create_level_card(f"images/customization/{profile_data[3]}.png", member.display_name, title[0]['item_name'], level, int(user_data_info[3]))
                         file = discord.File("level_card.png", filename="level_card.png")
-                        await channel.send(f"🎉 {member.mention} leveled up to level {level}!", file = file)
+                        print(user_data_info)
+                        if user_data_info[12] == 1:
+                            await channel.send(f"🎉 {member.mention} leveled up to level {level}!", file = file)
+                        else:
+                            await channel.send(f"🎉 {member.display_name} leveled up to level {level} 2", file = file)
 
 
     def cog_unload(self):
@@ -120,7 +124,10 @@ class Level(commands.Cog):
 
             create_level_card(f"images/customization/{profile_data[3]}.png", member.display_name, title[0]['item_name'], level, int(user_data_info[3]))
             file = discord.File("level_card.png", filename="level_card.png")
-            await channel.send(f"🎉 {message.author.mention} leveled up to level {level}!", file = file)
+            if user_data_info[12] == 1:
+                await channel.send(f"🎉 {member.mention} leveled up to level {level}!", file = file)
+            else:
+                await channel.send(f"🎉 {member.display_name} leveled up to level {level}!", file = file)
 
 async def setup(bot):
     #name of your log(name of cog, print_info)
