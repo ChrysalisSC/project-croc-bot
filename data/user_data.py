@@ -470,6 +470,53 @@ def reset_lockouts(env):
     connection.commit()
     connection.close()
 
+
+def get_leaderboard(env, limit=10):
+        print("GETTING LEADERBOARD")
+        print("ENV: ", env)
+        """Fetch the top users by total XP from the database."""
+        connection = sqlite3.connect(f'{env}_database.db')
+        cursor = connection.cursor()
+        cursor.execute(
+            '''
+            SELECT user_id, username, total_xp, level 
+            FROM users 
+            ORDER BY total_xp DESC 
+            LIMIT ?
+            ''', (limit,)
+        )
+        leaderboard = cursor.fetchall()
+        connection.close()
+        return leaderboard
+
+
+def fetch_leaderboard_data(env, limit=10):
+    """Fetch the top users by total XP from the database."""
+    connection = sqlite3.connect(f'{env}_database.db')
+    cursor = connection.cursor()
+    cursor.execute(
+        '''
+        SELECT username, total_xp, level, "default_header.jpg" AS header_image_path, "default_profile.jpg" AS profile_picture_path 
+        FROM users 
+        ORDER BY total_xp DESC 
+        LIMIT ?
+        ''', (limit,)
+    )
+    leaderboard = cursor.fetchall()
+    connection.close()
+    return [
+        {
+            "header_image_path": row[3],
+            "name": row[0],
+            "title": f"Level {row[2]} Player",
+            "level": row[2],
+            "xp": row[1],
+            "profile_picture_path": row[4]
+        }
+        for row in leaderboard
+    ]
+
+
 def get_broadcasts_status(user_id, env):
     #select tthe broadcast col from users
     connection = sqlite3.connect(f'{env}_database.db')

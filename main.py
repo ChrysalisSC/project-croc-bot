@@ -58,6 +58,8 @@ from cogs.shop import Shop
 from cogs.shop import setup as setup_shop
 from cogs.profile import Profile
 from cogs.profile import setup as setup_profile
+from cogs.leaderboards import Leaderboards
+from cogs.leaderboards import setup as setup_leaderboards
 
 import discord
 from discord.ext import commands, tasks
@@ -186,6 +188,7 @@ async def on_ready():
     await setup_grand_exchange(bot)
     await setup_shop(bot)
     await setup_profile(bot)
+    await setup_leaderboards(bot)
 
     #if its the main bot running - not used for testing
     if bot.env == 'prod':
@@ -194,7 +197,7 @@ async def on_ready():
     if bot.env == 'test':
         await setup_repository(bot)
     if bot.env == 'dev':
-        await setup_music(bot)
+        #await setup_music(bot)
         pass
 
     #load all registered views
