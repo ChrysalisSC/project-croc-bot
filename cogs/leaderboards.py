@@ -73,7 +73,10 @@ class Leaderboards(commands.Cog):
 
         output_path = "leaderboard.png"
         create_leaderboard_image(user_list, output_path)
-        await ctx.send("Generating leaderboard...")
+        file = discord.File(output_path, filename="leaderboard.png")
+        await ctx.send(file=file)
+
+        
 
 async def setup(bot):
     #name of your log(name of cog, print_info)
@@ -136,6 +139,8 @@ def create_leaderboard_image(user_data_list, output_path="leaderboard.png"):
             draw.text((rank_x, rank_y), rank_text, font=rank_font, fill=(255, 255, 255))
 
         background.save(output_path)
+    
+      
 
 
 def create_level_card(header_image_path, name, level, xp, profile_picture_path):
