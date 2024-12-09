@@ -88,7 +88,7 @@ def create_leaderboard_image(user_data_list, output_path="leaderboard.png"):
         """Create a leaderboard image with a stacked layout and rankings."""
         card_width, card_height = 800, 100
         margin = 5
-        title_height = 150
+        title_height = 100
         leaderboard_width = card_width + 100  # Extra space for rankings
         leaderboard_height = title_height + (card_height + margin) * len(user_data_list) - margin
 
@@ -108,7 +108,7 @@ def create_leaderboard_image(user_data_list, output_path="leaderboard.png"):
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
         draw.text(
-            ((leaderboard_width - text_width) // 2, (title_height - text_height) // 2),
+            ((leaderboard_width - text_width-30) // 2, (title_height - text_height - 30) // 2),
             title_text,
             font=title_font,
             fill=(255, 255, 255)
@@ -135,7 +135,7 @@ def create_leaderboard_image(user_data_list, output_path="leaderboard.png"):
             rank_width = rank_bbox[2] - rank_bbox[0]
             rank_height = rank_bbox[3] - rank_bbox[1]
             rank_x = (100 - rank_width) // 2
-            rank_y = y_offset + (card_height - rank_height) // 2
+            rank_y = y_offset + (card_height - rank_height -20 ) // 2
             draw.text((rank_x, rank_y), rank_text, font=rank_font, fill=(255, 255, 255))
 
         background.save(output_path)
