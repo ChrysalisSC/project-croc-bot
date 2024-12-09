@@ -12,9 +12,13 @@ class GrandExchangeView(discord.ui.View):
         super().__init__(timeout=None)
         self.view_identifier = view_identifier
         self.bot = bot
+        # change store name to store name from view identifier after grand_exchange_{store_name}_{ctx.channel.id}
         self.store_name = store_name
+
+        # Dynamically set the custom_id for the button
+        self.buy_button.custom_id = f"exchange_buy_{self.store_name}"
     
-    @discord.ui.button(label="Browse Collection", style=discord.ButtonStyle.primary, custom_id="exchange_buy_{self.store_name}")
+    @discord.ui.button(label="Browse Collection", style=discord.ButtonStyle.primary)
     async def buy_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             print(f"starting shop for {self.store_name}")

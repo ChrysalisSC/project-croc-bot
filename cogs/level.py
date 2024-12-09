@@ -15,7 +15,7 @@ class Level(commands.Cog):
         self.env = bot.env
         self.chronicles =self.set_croc(bot.env)
         self.check_voice_channels.start()  # Start the background task
-        self.level_speed = 50
+        self.level_speed = 1
     
     def set_croc(self, env):
         config = helpers.open_config(env)
@@ -51,7 +51,7 @@ class Level(commands.Cog):
                         if user_data_info[12] == 1:
                             await channel.send(f"🎉 {member.mention} leveled up to level {level}!", file = file)
                         else:
-                            await channel.send(f"🎉 {member.display_name} leveled up to level {level} 2", file = file)
+                            await channel.send(f"🎉 {member.display_name} leveled up to level {level}!", file = file)
 
 
     def cog_unload(self):
