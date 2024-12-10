@@ -149,7 +149,7 @@ def start_database(env):
         INSERT OR IGNORE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ''',
-        (600001, 'badge', 'Game Award 2024', 'Awarded during the 2024 game awards', 'common', 0)
+        (600001, 'badge', 'Game Award 2024','default', 'Awarded during the 2024 game awards', 'common', 0)
     )
 
 
