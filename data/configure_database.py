@@ -135,6 +135,7 @@ def start_database(env):
         (400000, 'profile_color', 'white', 'default', 'white.', 'common', 0)
     )
 
+    #badges
     cursor.execute(
         '''
         INSERT OR IGNORE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
@@ -142,6 +143,15 @@ def start_database(env):
         ''',
         (600000, 'badge', 'Starting Out', 'default', 'The secret of getting ahead is getting started', 'common', 0)
     )
+
+    cursor.execute(
+        '''
+        INSERT OR IGNORE INTO items (item_id, item_type, item_name, item_shop, description, rarity, price)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (600001, 'badge', 'Game Award 2024', 'Awarded during the 2024 game awards', 'common', 0)
+    )
+
 
 
     #intrests
